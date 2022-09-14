@@ -7,19 +7,12 @@ class CodeLexer:
     )
     tokens = keywords + (
         'INTEGER', 'STRING',
-        'SET', 'LSBRACKET', 'RSBRACKET', 'LCBRACKET', 'RCBRACKET', 'LPARENTHESIS', 'RPARENTHESIS',
         'IADD', 'ISUB',
         'ID', 'NEWLINE',
     )
+    literals = ['=', '+', '-', '(', ')', '{', '}', '[', ']']
 
     t_ignore = ' \t'
-    t_SET = r'='
-    t_LSBRACKET = r'\['
-    t_RSBRACKET = r'\]'
-    t_LCBRACKET = r'\{'
-    t_RCBRACKET = r'\}'
-    t_LPARENTHESIS = r'\('
-    t_RPARENTHESIS = r'\)'
     t_IADD = r'\+='
     t_ISUB = r'\-='
 
