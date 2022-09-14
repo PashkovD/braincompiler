@@ -1,0 +1,16 @@
+int a = "a"
+int b = "b"
+int c = "\n"
+ind d = 0
+
+while(True){
+    out b
+    goto a
+    asm(".")
+    if (d){
+        d = 2
+        out c
+    } else{
+        d -= 1
+    }
+}
