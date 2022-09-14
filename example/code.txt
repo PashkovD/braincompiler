@@ -10,7 +10,7 @@ while(True){
     if (d){
         d = 2
         out c
-    } else{
+    } else {
         d -= 1
     }
 }
