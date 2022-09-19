@@ -1,5 +1,10 @@
 int a = "a"
-int b = "b"
-int d = 0
-asm("+-[-]")
+int b = 10
+
+
+goto b
+asm("[-")
 goto a
+asm(".")
+goto b
+asm("]")

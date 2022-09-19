@@ -33,10 +33,13 @@ class CodeParser:
 
     def p_declaration(self, p):
         """declaration  : int ID '=' INTEGER NEWLINE
+                        | int ID '=' STRING NEWLINE
                         | int ID"""
         if len(p) == 3:
             p[0] = ASTDeclaration(p[2], 0)
             return
+        if isinstance(p[4], str):
+            p[4] = ord(p[4])
         p[0] = ASTDeclaration(p[2], p[4])
 
     def p_assembler(self, p):

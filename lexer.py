@@ -22,9 +22,6 @@ class CodeLexer:
     def t_STRING(self, t):
         r'\".*?\"'
         t.value = t.value[1:-1]
-        if len(t.value) == 1:
-            t.value = ord(t.value)
-            t.type = 'INTEGER'
         return t
 
     def t_ID(self, t):
