@@ -1,0 +1,5 @@
+int a = "a"
+int b = "b"
+int d = 0
+asm("+-[-]")
+goto a
