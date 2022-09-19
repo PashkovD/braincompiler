@@ -65,6 +65,108 @@ class ASTIn(IProcessable):
         return [Goto(self.name), ","]
 
 
+class ASTIaddInt(IProcessable):
+    def __init__(self, names: List[str], num: int):
+        self.names: List[str] = names
+        self.num: int = num
+
+    def __str__(self):
+        return f"{str(self.names)[1:-1]} += {self.num}"
+
+    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+        data = []
+        for i in self.names:
+            data += [Goto(i), bf_add(self.num)]
+        return data
+
+
+class ASTIsubInt(IProcessable):
+    def __init__(self, names: List[str], num: int):
+        self.names: List[str] = names
+        self.num: int = num
+
+    def __str__(self):
+        return f"{str(self.names)[1:-1]} -= {self.num}"
+
+    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+        data = []
+        for i in self.names:
+            data += [Goto(i), bf_add(-self.num)]
+        return data
+
+
+class ASTSetInt(IProcessable):
+    def __init__(self, names: List[str], num: int):
+        self.names: List[str] = names
+        self.num: int = num
+
+    def __str__(self):
+        return f"{str(self.names)[1:-1]} = {self.num}"
+
+    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+        data = []
+        for i in self.names:
+            data += [Goto(i), "[-]", bf_add(self.num)]
+        return data
+
+
+class ASTIaddVar(IProcessable):
+    def __init__(self, names: List[str], right: str):
+        self.names: List[str] = names
+        self.right: str = right
+
+    def __str__(self):
+        return f"{str(self.names)[1:-1]} += {self.right}"
+
+    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+        data = []
+        data += [Goto(self.right), "[", "-"]
+        for i in self.names:
+            data += [Goto(i), "+"]
+
+        data += [Goto(self.right), "]"]
+        return data
+
+
+class ASTIsubVar(IProcessable):
+    def __init__(self, names: List[str], right: str):
+        self.names: List[str] = names
+        self.right: str = right
+
+    def __str__(self):
+        return f"{str(self.names)[1:-1]} -= {self.right}"
+
+    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+        data = []
+        data += [Goto(self.right), "[", "-"]
+        for i in self.names:
+            data += [Goto(i), "-"]
+
+        data += [Goto(self.right), "]"]
+        return data
+
+
+class ASTSetVar(IProcessable):
+    def __init__(self, names: List[str], right: str):
+        self.names: List[str] = names
+        self.right: str = right
+
+    def __str__(self):
+        return f"{str(self.names)[1:-1]} = {self.right}"
+
+    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+        data = []
+        for i in self.names:
+            data += [Goto(i), "[-]"]
+
+        data += [Goto(self.right), "[", "-"]
+        for i in self.names:
+            data += [Goto(i), "+"]
+
+        data += [Goto(self.right), "]"]
+        return data
+
+
 class ASTFile:
     def __init__(self):
         self.declarations: List[ASTDeclaration] = []

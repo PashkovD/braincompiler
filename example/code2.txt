@@ -2,8 +2,8 @@ int a
 int b = 10
 
 in a
-goto b
-asm("[-")
+in b
+a,b-="0"
+a += b
+a+="0"
 out a
-goto b
-asm("]")

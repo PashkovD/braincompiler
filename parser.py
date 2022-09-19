@@ -2,7 +2,8 @@ from typing import List
 
 from ply import yacc
 
-from code_ast import ASTDeclaration, ASTFile, ASTAssembler, ASTGoto, ASTOut, ASTIn
+from code_ast import ASTDeclaration, ASTFile, ASTAssembler, ASTGoto, ASTOut, ASTIn, ASTSetInt, ASTSetVar, ASTIaddInt, \
+    ASTIsubInt, ASTIaddVar, ASTIsubVar
 
 
 class CodeParser:
@@ -22,7 +23,8 @@ class CodeParser:
                 | file assembler
                 | file astgoto
                 | file astout
-                | file astin"""
+                | file astin
+                | file astset"""
         if len(p) == 1:
             p[0] = ASTFile()
             p[0].declarations = self.declarations
@@ -68,3 +70,58 @@ class CodeParser:
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[2]}")
         p[0] = ASTOut(p[2])
 
+    def p_left_operands_start(self, p):
+        """left_operands     : ID"""
+        if p[1] not in [i.name for i in self.declarations]:
+            raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[1]}")
+        p[0] = [p[1]]
+
+    def p_left_operands_id(self, p):
+        """left_operands    : left_operands ',' ID"""
+        if p[3] not in [i.name for i in self.declarations]:
+            raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[3]}")
+        p[0] = p[1]
+        p[0].append(p[3])
+
+    def p_astset_int(self, p):
+        """astset   : left_operands '=' INTEGER NEWLINE
+                    | left_operands IADD INTEGER NEWLINE
+                    | left_operands ISUB INTEGER NEWLINE
+                    | left_operands '=' STRING NEWLINE
+                    | left_operands IADD STRING NEWLINE
+                    | left_operands ISUB STRING NEWLINE"""
+        decs = [i.name for i in self.declarations]
+        if not all(i in decs for i in p[1]):
+            Exception(f"[:{p.slice[1].lineno}]Unknown ID in left operands")
+
+        if isinstance(p[3], str):
+            p[3] = ord(p[3])
+
+        match p[2]:
+            case "=":
+                p[0] = ASTSetInt(p[1], p[3])
+            case "+=":
+                p[0] = ASTIaddInt(p[1], p[3])
+            case "-=":
+                p[0] = ASTIsubInt(p[1], p[3])
+            case _ as e:
+                raise Exception(e)
+
+    def p_astset_var(self, p):
+        """astset   : left_operands '=' ID NEWLINE
+                    | left_operands IADD ID NEWLINE
+                    | left_operands ISUB ID NEWLINE"""
+        decs = [i.name for i in self.declarations]
+        if not all(i in decs for i in p[1]):
+            Exception(f"[:{p.slice[1].lineno}]Unknown ID in left operands")
+        if p[3] not in decs:
+            Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[3]}")
+        match p[2]:
+            case "=":
+                p[0] = ASTSetVar(p[1], p[3])
+            case "+=":
+                p[0] = ASTIaddVar(p[1], p[3])
+            case "-=":
+                p[0] = ASTIsubVar(p[1], p[3])
+            case _ as e:
+                raise Exception(e)

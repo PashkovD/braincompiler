@@ -10,7 +10,7 @@ class CodeLexer:
         'IADD', 'ISUB',
         'ID', 'NEWLINE',
     )
-    literals = ['=', '+', '-', '(', ')', '{', '}', '[', ']']
+    literals = ['=', '+', '-', '(', ')', '{', '}', '[', ']', ',']
 
     t_ignore = ' \t'
     t_IADD = r'\+='
