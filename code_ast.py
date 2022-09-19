@@ -43,6 +43,28 @@ class ASTGoto(IProcessable):
         return [Goto(self.name)]
 
 
+class ASTOut(IProcessable):
+    def __init__(self, name: str):
+        self.name: str = name
+
+    def __str__(self):
+        return f"out {self.name}"
+
+    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+        return [Goto(self.name), "."]
+
+
+class ASTIn(IProcessable):
+    def __init__(self, name: str):
+        self.name: str = name
+
+    def __str__(self):
+        return f"out {self.name}"
+
+    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+        return [Goto(self.name), ","]
+
+
 class ASTFile:
     def __init__(self):
         self.declarations: List[ASTDeclaration] = []
