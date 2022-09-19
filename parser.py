@@ -3,12 +3,12 @@ from typing import List
 from ply import yacc
 
 from code_ast import ASTDeclaration, ASTFile, ASTAssembler, ASTGoto, ASTOut, ASTIn, ASTSetInt, ASTSetVar, ASTIaddInt, \
-    ASTIsubInt, ASTIaddVar, ASTIsubVar
+    ASTIsubInt, ASTIaddVar, ASTIsubVar, ASTWhile
 
 
 class CodeParser:
     def __init__(self, tokens, **kwargs):
-        self.declarations: List[ASTDeclaration] = []
+        self.declarations: List[ASTDeclaration] = [ASTDeclaration("False", 0), ASTDeclaration("True", 1)]
         self.tokens = tokens
         self.parser = yacc.yacc(module=self, **kwargs)
 
@@ -24,7 +24,8 @@ class CodeParser:
                 | file astgoto
                 | file astout
                 | file astin
-                | file astset"""
+                | file astset
+                | file astwhile"""
         if len(p) == 1:
             p[0] = ASTFile()
             p[0].declarations = self.declarations
@@ -125,3 +126,25 @@ class CodeParser:
                 p[0] = ASTIsubVar(p[1], p[3])
             case _ as e:
                 raise Exception(e)
+
+    def p_code_block_start(self, p):
+        """code_block   : '{' NEWLINE """
+        p[0] = []
+
+    def p_code_block_code(self, p):
+        """code_block   : code_block assembler
+                        | code_block astgoto
+                        | code_block astout
+                        | code_block astin
+                        | code_block astset
+                        | code_block astwhile"""
+        p[0] = p[1]
+        p[0].append(p[2])
+
+    def p_astwhile(self, p):
+        """astwhile : while '(' ID ')' code_block '}' NEWLINE"""
+        if p[3] not in [i.name for i in self.declarations]:
+            raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[3]}")
+
+        p[0] = ASTWhile(p[3], p[5])
+
