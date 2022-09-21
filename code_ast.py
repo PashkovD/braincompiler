@@ -184,6 +184,24 @@ class ASTWhile(IProcessable):
         return data
 
 
+class ASTIf(IProcessable):
+    def __init__(self, test_var: str, code: List[IProcessable]):
+        self.test_var: str = test_var
+        self.code: List[IProcessable] = code
+
+    def __str__(self):
+        return f"if({self.test_var})"
+
+    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+        data = []
+        data += [Goto(self.test_var), "["]
+        for i in self.code:
+            data += i.process(declarations)
+        data += ASTSetVar(["__copy_var"], self.test_var).process(declarations)
+        data += ["]"]
+        data += ASTSetVar([self.test_var], "__copy_var").process(declarations)
+        return data
+
 
 class ASTFile:
     def __init__(self):

@@ -3,12 +3,16 @@ from typing import List
 from ply import yacc
 
 from code_ast import ASTDeclaration, ASTFile, ASTAssembler, ASTGoto, ASTOut, ASTIn, ASTSetInt, ASTSetVar, ASTIaddInt, \
-    ASTIsubInt, ASTIaddVar, ASTIsubVar, ASTWhile
+    ASTIsubInt, ASTIaddVar, ASTIsubVar, ASTWhile, ASTIf
 
 
 class CodeParser:
     def __init__(self, tokens, **kwargs):
-        self.declarations: List[ASTDeclaration] = [ASTDeclaration("False", 0), ASTDeclaration("True", 1)]
+        self.declarations: List[ASTDeclaration] = [
+            ASTDeclaration("False", 0),
+            ASTDeclaration("True", 1),
+            ASTDeclaration("__copy_var", 0),
+        ]
         self.tokens = tokens
         self.parser = yacc.yacc(module=self, **kwargs)
 
@@ -25,7 +29,8 @@ class CodeParser:
                 | file astout
                 | file astin
                 | file astset
-                | file astwhile"""
+                | file astwhile
+                | file astif"""
         if len(p) == 1:
             p[0] = ASTFile()
             p[0].declarations = self.declarations
@@ -137,7 +142,8 @@ class CodeParser:
                         | code_block astout
                         | code_block astin
                         | code_block astset
-                        | code_block astwhile"""
+                        | code_block astwhile
+                        | code_block astif"""
         p[0] = p[1]
         p[0].append(p[2])
 
@@ -147,4 +153,11 @@ class CodeParser:
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[3]}")
 
         p[0] = ASTWhile(p[3], p[5])
+
+    def p_astif(self, p):
+        """astif : if '(' ID ')' code_block '}' NEWLINE"""
+        if p[3] not in [i.name for i in self.declarations]:
+            raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[3]}")
+
+        p[0] = ASTIf(p[3], p[5])
 

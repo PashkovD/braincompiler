@@ -1,15 +1,11 @@
 int a
-int b = 10
-int b1 = 0
-int c = 0
+int b
 
 in a
-in b
-a,b-="0"
-while(a){
-    a-=1
-    c,b1+=b
-    b=b1
+a-="0"
+if(a){
+    b="a"
+    out b
 }
-c+="0"
-out c
+a+="0"
+out a
