@@ -13,6 +13,7 @@ class CodeLexer:
     literals = ['=', '+', '-', '(', ')', '{', '}', '[', ']', ',']
 
     t_ignore = ' \t'
+    t_ignore_COMMENT = r'\#.*'
     t_IADD = r'\+='
     t_ISUB = r'\-='
 

@@ -5,10 +5,12 @@ from parser import CodeParser
 
 
 def main():
+    lexer = CodeLexer()
+    parser = CodeParser(lexer.tokens)
     with open("example/code2.txt") as f:
-        a: ASTFile = (CodeParser(CodeLexer.tokens).parse(input=f.read() + "\n", lexer=CodeLexer().lexer))
+        a: ASTFile = (parser.parse(input=f.read() + "\n", lexer=lexer.lexer))
 
-    if not isinstance(a, ASTFile):
+    if not parser.parser.errorok:
         raise Exception
 
     data = CodeLinker(a).process()

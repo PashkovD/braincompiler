@@ -3,7 +3,7 @@ int b
 
 in a
 a-="0"
-if(a){
+if(a){ # jhfjfjhfgghfgfhfgj
     b="a"
     out b
 }
