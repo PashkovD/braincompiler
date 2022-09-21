@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Tuple
 
 from goto import Goto
 from util import bf_add
@@ -198,8 +198,31 @@ class ASTIf(IProcessable):
         for i in self.code:
             data += i.process(declarations)
         data += ASTSetVar(["__copy_var"], self.test_var).process(declarations)
-        data += ["]"]
+        data += [Goto(self.test_var), "]"]
         data += ASTSetVar([self.test_var], "__copy_var").process(declarations)
+        return data
+
+
+class ASTIfElif(IProcessable):
+    def __init__(self, data: List[Tuple[str, List[IProcessable]]], code_else: List[IProcessable] = None):
+        self.data: List[Tuple[str, List[IProcessable]]] = data
+        self.code_else: List[IProcessable] = code_else
+
+    def __str__(self):
+        return f"if({self.data[0][0]})" + \
+                "".join(f"elif({i[0]})" for i in self.data) + \
+                f"else" if self.code_else is not None else ""
+
+    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+        data = []
+        data += ASTSetInt(["__else_flag"], 1).process(declarations)
+        data += ASTIf(self.data[0][0], self.data[0][1] + [ASTSetInt(["__else_flag"], 0)]).process(declarations)
+        for i in self.data[1:]:
+            data += ASTIf("__else_flag",
+                          [ASTIf(i[0], i[1] + [ASTSetInt(["__else_flag"], 0)])]
+                          ).process(declarations)
+        if self.code_else is not None:
+            data += ASTIf("__else_flag", self.code_else + [ASTSetInt(["__else_flag"], 0)]).process(declarations)
         return data
 
 

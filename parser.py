@@ -3,7 +3,7 @@ from typing import List
 from ply import yacc
 
 from code_ast import ASTDeclaration, ASTFile, ASTAssembler, ASTGoto, ASTOut, ASTIn, ASTSetInt, ASTSetVar, ASTIaddInt, \
-    ASTIsubInt, ASTIaddVar, ASTIsubVar, ASTWhile, ASTIf
+    ASTIsubInt, ASTIaddVar, ASTIsubVar, ASTWhile, ASTIf, ASTIfElif
 
 
 class CodeParser:
@@ -12,6 +12,7 @@ class CodeParser:
             ASTDeclaration("False", 0),
             ASTDeclaration("True", 1),
             ASTDeclaration("__copy_var", 0),
+            ASTDeclaration("__else_flag", 0),
         ]
         self.tokens = tokens
         self.parser = yacc.yacc(module=self, **kwargs)
@@ -30,7 +31,8 @@ class CodeParser:
                 | file astin
                 | file astset
                 | file astwhile
-                | file astif"""
+                | file astif
+                | file astif_elif"""
         if len(p) == 1:
             p[0] = ASTFile()
             p[0].declarations = self.declarations
@@ -143,7 +145,8 @@ class CodeParser:
                         | code_block astin
                         | code_block astset
                         | code_block astwhile
-                        | code_block astif"""
+                        | code_block astif
+                        | code_block astif_elif"""
         p[0] = p[1]
         p[0].append(p[2])
 
@@ -160,4 +163,28 @@ class CodeParser:
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[3]}")
 
         p[0] = ASTIf(p[3], p[5])
+
+    def p_astif_elif_if(self, p):
+        """astif_elif : astif elif '(' ID ')' code_block '}' NEWLINE"""
+        if p[4] not in [i.name for i in self.declarations]:
+            raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[4]}")
+
+        p[0] = ASTIfElif([(p[1].test_var, p[1].code), (p[4], p[6])])
+
+    def p_astif_elif_elif(self, p):
+        """astif_elif : astif_elif elif '(' ID ')' code_block '}' NEWLINE"""
+        if p[4] not in [i.name for i in self.declarations]:
+            raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[4]}")
+        p[0] = p[1]
+        p[0].data.append((p[4], p[6].code))
+
+    def p_astif_else_if(self, p):
+        """astif_elif : astif else code_block '}' NEWLINE"""
+        p[0] = ASTIfElif([(p[1].test_var, p[1].code)], p[3])
+
+    def p_astif_else_elif(self, p):
+        """astif_elif : astif_elif else code_block '}' NEWLINE"""
+        p[0] = p[1]
+        p[0].code_else = p[3]
+
 
