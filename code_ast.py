@@ -1,4 +1,4 @@
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Dict
 
 from goto import Goto
 from util import bf_add
@@ -17,7 +17,7 @@ class ASTDeclaration:
 
 
 class IProcessable:
-    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, ASTDeclaration]) -> List[Union[Goto, str]]:
         raise Exception
 
 
@@ -28,7 +28,7 @@ class ASTAssembler(IProcessable):
     def __str__(self):
         return f"asm({repr(self.code)})"
 
-    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, ASTDeclaration]) -> List[Union[Goto, str]]:
         return [self.code]
 
 
@@ -39,7 +39,7 @@ class ASTGoto(IProcessable):
     def __str__(self):
         return f"goto {self.name}"
 
-    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, ASTDeclaration]) -> List[Union[Goto, str]]:
         return [Goto(self.name)]
 
 
@@ -50,7 +50,7 @@ class ASTOut(IProcessable):
     def __str__(self):
         return f"out {self.name}"
 
-    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, ASTDeclaration]) -> List[Union[Goto, str]]:
         return [Goto(self.name), "."]
 
 
@@ -61,7 +61,7 @@ class ASTIn(IProcessable):
     def __str__(self):
         return f"out {self.name}"
 
-    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, ASTDeclaration]) -> List[Union[Goto, str]]:
         return [Goto(self.name), ","]
 
 
@@ -73,7 +73,7 @@ class ASTIaddInt(IProcessable):
     def __str__(self):
         return f"{str(self.names)[1:-1]} += {self.num}"
 
-    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, ASTDeclaration]) -> List[Union[Goto, str]]:
         data = []
         for i in self.names:
             data += [Goto(i), bf_add(self.num)]
@@ -88,7 +88,7 @@ class ASTIsubInt(IProcessable):
     def __str__(self):
         return f"{str(self.names)[1:-1]} -= {self.num}"
 
-    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, ASTDeclaration]) -> List[Union[Goto, str]]:
         data = []
         for i in self.names:
             data += [Goto(i), bf_add(-self.num)]
@@ -103,7 +103,7 @@ class ASTSetInt(IProcessable):
     def __str__(self):
         return f"{str(self.names)[1:-1]} = {self.num}"
 
-    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, ASTDeclaration]) -> List[Union[Goto, str]]:
         data = []
         for i in self.names:
             data += [Goto(i), "[-]", bf_add(self.num)]
@@ -118,7 +118,7 @@ class ASTIaddVar(IProcessable):
     def __str__(self):
         return f"{str(self.names)[1:-1]} += {self.right}"
 
-    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, ASTDeclaration]) -> List[Union[Goto, str]]:
         data = []
         data += [Goto(self.right), "[", "-"]
         for i in self.names:
@@ -136,7 +136,7 @@ class ASTIsubVar(IProcessable):
     def __str__(self):
         return f"{str(self.names)[1:-1]} -= {self.right}"
 
-    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, ASTDeclaration]) -> List[Union[Goto, str]]:
         data = []
         data += [Goto(self.right), "[", "-"]
         for i in self.names:
@@ -154,7 +154,7 @@ class ASTSetVar(IProcessable):
     def __str__(self):
         return f"{str(self.names)[1:-1]} = {self.right}"
 
-    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, ASTDeclaration]) -> List[Union[Goto, str]]:
         data = []
         for i in self.names:
             data += [Goto(i), "[-]"]
@@ -175,7 +175,7 @@ class ASTWhile(IProcessable):
     def __str__(self):
         return f"while({self.test_var})"
 
-    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, ASTDeclaration]) -> List[Union[Goto, str]]:
         data = []
         data += [Goto(self.test_var), "["]
         for i in self.code:
@@ -192,7 +192,7 @@ class ASTIf(IProcessable):
     def __str__(self):
         return f"if({self.test_var})"
 
-    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, ASTDeclaration]) -> List[Union[Goto, str]]:
         data = []
         data += [Goto(self.test_var), "["]
         for i in self.code:
@@ -213,7 +213,7 @@ class ASTIfElif(IProcessable):
                 "".join(f"elif({i[0]})" for i in self.data) + \
                 f"else" if self.code_else is not None else ""
 
-    def process(self, declarations: List[ASTDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, ASTDeclaration]) -> List[Union[Goto, str]]:
         data = []
         data += ASTSetInt(["__else_flag"], 1).process(declarations)
         data += ASTIf(self.data[0][0], self.data[0][1] + [ASTSetInt(["__else_flag"], 0)]).process(declarations)
@@ -228,14 +228,14 @@ class ASTIfElif(IProcessable):
 
 class ASTFile:
     def __init__(self):
-        self.declarations: List[ASTDeclaration] = []
+        self.declarations: Dict[str, ASTDeclaration] = {}
         self.code: List[IProcessable] = []
 
     def process(self) -> List[Union[Goto, str]]:
         data: List[Union[Goto, str]] = []
-        for i in self.declarations:
+        for i in self.declarations.values():
             data.extend(i.process())
 
         for i in self.code:
-            data.extend(i.process(self.declarations))
+            data += i.process(self.declarations)
         return data

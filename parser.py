@@ -1,4 +1,5 @@
-from typing import List
+from collections import OrderedDict
+from typing import Dict
 
 from ply import yacc
 
@@ -8,12 +9,12 @@ from code_ast import ASTDeclaration, ASTFile, ASTAssembler, ASTGoto, ASTOut, AST
 
 class CodeParser:
     def __init__(self, tokens, **kwargs):
-        self.declarations: List[ASTDeclaration] = [
-            ASTDeclaration("False", 0),
-            ASTDeclaration("True", 1),
-            ASTDeclaration("__copy_var", 0),
-            ASTDeclaration("__else_flag", 0),
-        ]
+        self.declarations: Dict[str, ASTDeclaration] = OrderedDict({
+            "False": ASTDeclaration("False", 0),
+            "True": ASTDeclaration("True", 1),
+            "__copy_var": ASTDeclaration("__copy_var", 0),
+            "__else_flag": ASTDeclaration("__else_flag", 0),
+        })
         self.tokens = tokens
         self.parser = yacc.yacc(module=self, **kwargs)
 
@@ -39,7 +40,10 @@ class CodeParser:
         elif len(p) == 3:
             p[0] = p[1]
             if isinstance(p[2], ASTDeclaration):
-                self.declarations.append(p[2])
+                if p[2] in self.declarations.keys():
+                    raise Exception(f"[:?]Redeclaration ID {p[2]}")
+
+                self.declarations[p[2].name] = p[2]
                 return
             p[0].code.append(p[2])
 
@@ -56,37 +60,37 @@ class CodeParser:
 
     def p_assembler(self, p):
         """assembler  : asm '(' STRING ')' NEWLINE"""
-        if not all(i in "+-[]<>.,"for i in p[3]):
+        if not all(i in "+-[]<>.," for i in p[3]):
             raise Exception(f"[:{p.slice[1].lineno}]Incorrect symbol in asm line")
         p[0] = ASTAssembler(p[3])
 
     def p_astgoto(self, p):
         """astgoto  : goto ID NEWLINE"""
-        if p[2] not in [i.name for i in self.declarations]:
+        if p[2] not in self.declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[2]}")
         p[0] = ASTGoto(p[2])
 
     def p_astin(self, p):
         """astin  : in ID NEWLINE"""
-        if p[2] not in [i.name for i in self.declarations]:
+        if p[2] not in self.declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[2]}")
         p[0] = ASTIn(p[2])
 
     def p_astout(self, p):
         """astout  : out ID NEWLINE"""
-        if p[2] not in [i.name for i in self.declarations]:
+        if p[2] not in self.declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[2]}")
         p[0] = ASTOut(p[2])
 
     def p_left_operands_start(self, p):
         """left_operands     : ID"""
-        if p[1] not in [i.name for i in self.declarations]:
+        if p[1] not in self.declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[1]}")
         p[0] = [p[1]]
 
     def p_left_operands_id(self, p):
         """left_operands    : left_operands ',' ID"""
-        if p[3] not in [i.name for i in self.declarations]:
+        if p[3] not in self.declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[3]}")
         p[0] = p[1]
         p[0].append(p[3])
@@ -98,7 +102,7 @@ class CodeParser:
                     | left_operands '=' STRING NEWLINE
                     | left_operands IADD STRING NEWLINE
                     | left_operands ISUB STRING NEWLINE"""
-        decs = [i.name for i in self.declarations]
+        decs = self.declarations.keys()
         if not all(i in decs for i in p[1]):
             Exception(f"[:{p.slice[1].lineno}]Unknown ID in left operands")
 
@@ -119,7 +123,7 @@ class CodeParser:
         """astset   : left_operands '=' ID NEWLINE
                     | left_operands IADD ID NEWLINE
                     | left_operands ISUB ID NEWLINE"""
-        decs = [i.name for i in self.declarations]
+        decs = self.declarations.keys()
         if not all(i in decs for i in p[1]):
             Exception(f"[:{p.slice[1].lineno}]Unknown ID in left operands")
         if p[3] not in decs:
@@ -152,28 +156,28 @@ class CodeParser:
 
     def p_astwhile(self, p):
         """astwhile : while '(' ID ')' code_block '}' NEWLINE"""
-        if p[3] not in [i.name for i in self.declarations]:
+        if p[3] not in self.declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[3]}")
 
         p[0] = ASTWhile(p[3], p[5])
 
     def p_astif(self, p):
         """astif : if '(' ID ')' code_block '}' NEWLINE"""
-        if p[3] not in [i.name for i in self.declarations]:
+        if p[3] not in self.declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[3]}")
 
         p[0] = ASTIf(p[3], p[5])
 
     def p_astif_elif_if(self, p):
         """astif_elif : astif elif '(' ID ')' code_block '}' NEWLINE"""
-        if p[4] not in [i.name for i in self.declarations]:
+        if p[4] not in self.declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[4]}")
 
         p[0] = ASTIfElif([(p[1].test_var, p[1].code), (p[4], p[6])])
 
     def p_astif_elif_elif(self, p):
         """astif_elif : astif_elif elif '(' ID ')' code_block '}' NEWLINE"""
-        if p[4] not in [i.name for i in self.declarations]:
+        if p[4] not in self.declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[4]}")
         p[0] = p[1]
         p[0].data.append((p[4], p[6].code))
@@ -186,5 +190,3 @@ class CodeParser:
         """astif_elif : astif_elif else code_block '}' NEWLINE"""
         p[0] = p[1]
         p[0].code_else = p[3]
-
-
