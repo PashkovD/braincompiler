@@ -1,23 +1,5 @@
 int a;
-int b;
-int c;
 
-in a;
-in b;
-a,b-="0";
-if(a){
-    c="a";
-    out c;
-}
-elif(b){
-    c="b";
-    out c;
-}
-else{
-    c="c";
-    out c;
-}
-a,b+="0";
+
+a= "0"+1;
 out a;
-out b;
-out c;

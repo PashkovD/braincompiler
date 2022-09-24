@@ -8,7 +8,7 @@ from code_ast import ASTDeclaration, ASTFile, ASTAssembler, ASTGoto, ASTOut, AST
 
 
 class CodeParser:
-    def __init__(self, tokens, **kwargs):
+    def __init__(self, tokens, literals, **kwargs):
         self.declarations: Dict[str, ASTDeclaration] = OrderedDict({
             "False": ASTDeclaration("False", 0),
             "True": ASTDeclaration("True", 1),
@@ -17,6 +17,10 @@ class CodeParser:
         })
         self.tokens = tokens
         self.parser = yacc.yacc(module=self, **kwargs)
+        self.precedence = (
+            ('left', '+', '-'),
+            ('left', '*'),
+        )
 
     def parse(self, **kwargs):
         return self.parser.parse(**kwargs)
@@ -54,8 +58,7 @@ class CodeParser:
         p[0] = p[1]
 
     def p_declaration(self, p):
-        """declaration  : int ID '=' INTEGER ';'
-                        | int ID '=' STRING ';'
+        """declaration  : int ID '=' expr ';'
                         | int ID ';'"""
         if len(p) == 4:
             p[0] = ASTDeclaration(p[2], 0)
@@ -102,18 +105,12 @@ class CodeParser:
         p[0].append(p[3])
 
     def p_code_set_int(self, p):
-        """code     : left_operands '=' INTEGER ';'
-                    | left_operands IADD INTEGER ';'
-                    | left_operands ISUB INTEGER ';'
-                    | left_operands '=' STRING ';'
-                    | left_operands IADD STRING ';'
-                    | left_operands ISUB STRING ';'"""
+        """code     : left_operands '=' expr ';'
+                    | left_operands IADD expr ';'
+                    | left_operands ISUB expr ';'"""
         decs = self.declarations.keys()
         if not all(i in decs for i in p[1]):
             Exception(f"[:{p.slice[1].lineno}]Unknown ID in left operands")
-
-        if isinstance(p[3], str):
-            p[3] = ord(p[3])
 
         match p[2]:
             case "=":
@@ -126,7 +123,7 @@ class CodeParser:
                 raise Exception(e)
 
     def p_code_set_var(self, p):
-        """code   : left_operands '=' ID ';'
+        """code     : left_operands '=' ID ';'
                     | left_operands IADD ID ';'
                     | left_operands ISUB ID ';'"""
         decs = self.declarations.keys()
@@ -186,3 +183,28 @@ class CodeParser:
                 | astif_elif
                 | astif_else"""
         p[0] = p[1]
+
+    def p_expr_integer(self, p):
+        """expr : INTEGER"""
+        p[0] = p[1]
+
+    def p_expr_string(self, p):
+        """expr : STRING"""
+        p[0] = ord(p[1])
+
+    def p_expr_binary(self, p):
+        """expr : expr '+' expr
+                | expr '-' expr
+                | expr '*' expr"""
+        if p[2] == '+':
+            p[0] = p[1] + p[3]
+        elif p[2] == '-':
+            p[0] = p[1] - p[3]
+        elif p[2] == '*':
+            p[0] = p[1] * p[3]
+        else:
+            raise Exception
+
+    def p_expr_brackets(self, p):
+        """expr : '(' expr ')'"""
+        p[0] = p[2]
