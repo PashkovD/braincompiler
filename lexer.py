@@ -10,7 +10,7 @@ class CodeLexer:
         'IADD', 'ISUB',
         'ID', 'NEWLINE',
     )
-    literals = ['=', '+', '-', '(', ')', '{', '}', '[', ']', ',']
+    literals = ['=', '+', '-', '(', ')', '{', '}', '[', ']', ',', ';']
 
     t_ignore = ' \t'
     t_ignore_COMMENT = r'\#.*'
@@ -39,7 +39,7 @@ class CodeLexer:
     def t_NEWLINE(self, t):
         r'\n+'
         t.lexer.lineno += t.value.count("\n")
-        return t
+        # return t
 
     def t_error(self, t):
         raise Exception("Illegal character %s" % t.value[0])
