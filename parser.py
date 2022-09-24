@@ -190,6 +190,8 @@ class CodeParser:
 
     def p_expr_string(self, p):
         """expr : STRING"""
+        if len(p[1]) != 1:
+            raise Exception(f"[:{p.slice[1].lineno}]Only allowed a string size of 1")
         p[0] = ord(p[1])
 
     def p_expr_binary(self, p):
