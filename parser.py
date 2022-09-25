@@ -141,7 +141,7 @@ class CodeParser:
     def p_astif_elif_elif(self, p):
         """astif_elif : astif_elif elif '(' id ')' block_code"""
         p[0] = p[1]
-        p[0].data.append((p[4], p[6].code))
+        p[0].data.append((p[4], p[6]))
 
     def p_astif_else_if(self, p):
         """astif_else : astif else block_code"""
