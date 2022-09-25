@@ -3,18 +3,19 @@ from typing import Dict
 
 from ply import yacc
 
-from code_ast import ASTDeclaration, ASTFile, ASTAssembler, ASTGoto, ASTOut, ASTIn, ASTSetInt, ASTSetVar, ASTIaddInt, \
-    ASTIsubInt, ASTIaddVar, ASTIsubVar, ASTWhile, ASTIf, ASTIfElif
+from code_ast import ASTIntDeclaration, ASTFile, ASTAssembler, ASTGoto, ASTOut, ASTIn, ASTSetInt, ASTSetVar, ASTIaddInt, \
+    ASTIsubInt, ASTIaddVar, ASTIsubVar, ASTWhile, ASTIf, ASTIfElif, IDeclaration, ASTStringDeclaration
 
 
 class CodeParser:
     def __init__(self, tokens, literals, **kwargs):
-        self.vars_declarations: Dict[str, ASTDeclaration] = OrderedDict({
-            "False": ASTDeclaration("False", 0),
-            "True": ASTDeclaration("True", 1),
-            "__copy_var": ASTDeclaration("__copy_var", 0),
-            "__else_flag": ASTDeclaration("__else_flag", 0),
+        self.vars_declarations: Dict[str, IDeclaration] = OrderedDict({
+            "False": ASTIntDeclaration("False", 0),
+            "True": ASTIntDeclaration("True", 1),
+            "__copy_var": ASTIntDeclaration("__copy_var", 0),
+            "__else_flag": ASTIntDeclaration("__else_flag", 0),
         })
+
         self.tokens = tokens
         self.literals = literals
         self.parser = yacc.yacc(module=self, **kwargs)
@@ -37,7 +38,7 @@ class CodeParser:
             p[0].declarations = self.vars_declarations
         elif len(p) == 3:
             p[0] = p[1]
-            if isinstance(p[2], ASTDeclaration):
+            if isinstance(p[2], IDeclaration):
                 if p[2] in self.vars_declarations.keys():
                     raise Exception(f"[:?]Redeclaration ID {p[2]}")
 
@@ -58,15 +59,17 @@ class CodeParser:
         """block_code   : block_code_s '}'"""
         p[0] = p[1]
 
-    def p_declaration(self, p):
+    def p_declaration_int(self, p):
         """declaration  : int ID '=' expr ';'
                         | int ID ';'"""
         if len(p) == 4:
-            p[0] = ASTDeclaration(p[2], 0)
+            p[0] = ASTIntDeclaration(p[2], 0)
             return
-        if isinstance(p[4], str):
-            p[4] = ord(p[4])
-        p[0] = ASTDeclaration(p[2], p[4])
+        p[0] = ASTIntDeclaration(p[2], p[4])
+
+    def p_declaration_string(self, p):
+        """declaration  : string ID '=' STRING ';'"""
+        p[0] = ASTStringDeclaration(p[2], p[4])
 
     def p_code_asm(self, p):
         """code : asm '(' STRING ')' ';'"""

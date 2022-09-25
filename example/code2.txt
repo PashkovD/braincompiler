@@ -1,5 +1,18 @@
-int a;
+int a = "a";
+int b = "b";
+string c = "\n23456789";
+int d = 0;
+int e = 10;
 
-
-a= "00"+1;
-out a;
+while(e){
+    e -= 1;
+    out b;
+    goto a;
+    asm(".");
+    if (d){
+        d -= 1;
+    } else {
+        d = 3;
+        out c;
+    }
+}

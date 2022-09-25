@@ -5,7 +5,7 @@ from ply import lex
 
 class CodeLexer:
     keywords = (
-        'while', 'if', 'elif', 'else', 'in', 'out', 'goto', 'asm', 'int',
+        'while', 'if', 'elif', 'else', 'in', 'out', 'goto', 'asm', 'int', 'string',
     )
     tokens = keywords + (
         'INTEGER', 'STRING',
