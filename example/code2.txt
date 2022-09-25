@@ -1,18 +1,11 @@
-int a = "a";
-int b = "b";
 string c = "\n23456789";
-int d = 0;
 int e = 10;
 
 while(e){
     e -= 1;
-    out b;
-    goto a;
-    asm(".");
-    if (d){
-        d -= 1;
-    } else {
-        d = 3;
-        out c;
-    }
+    out c[1];
+    out c[2];
+    out c[3];
+    out c[4];
+    out c[0];
 }
