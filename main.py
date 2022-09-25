@@ -7,7 +7,7 @@ from parser import CodeParser
 def main():
     lexer = CodeLexer()
     parser = CodeParser(lexer.tokens, lexer.literals)
-    with open("example/code2.txt") as f:
+    with open("example/code.txt") as f:
         a: ASTFile = (parser.parse(input=f.read() + "\n", lexer=lexer.lexer))
 
     if not parser.parser.errorok:

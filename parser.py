@@ -9,13 +9,14 @@ from code_ast import ASTDeclaration, ASTFile, ASTAssembler, ASTGoto, ASTOut, AST
 
 class CodeParser:
     def __init__(self, tokens, literals, **kwargs):
-        self.declarations: Dict[str, ASTDeclaration] = OrderedDict({
+        self.vars_declarations: Dict[str, ASTDeclaration] = OrderedDict({
             "False": ASTDeclaration("False", 0),
             "True": ASTDeclaration("True", 1),
             "__copy_var": ASTDeclaration("__copy_var", 0),
             "__else_flag": ASTDeclaration("__else_flag", 0),
         })
         self.tokens = tokens
+        self.literals = literals
         self.parser = yacc.yacc(module=self, **kwargs)
         self.precedence = (
             ('left', '+', '-'),
@@ -33,14 +34,14 @@ class CodeParser:
                 | file code"""
         if len(p) == 1:
             p[0] = ASTFile()
-            p[0].declarations = self.declarations
+            p[0].declarations = self.vars_declarations
         elif len(p) == 3:
             p[0] = p[1]
             if isinstance(p[2], ASTDeclaration):
-                if p[2] in self.declarations.keys():
+                if p[2] in self.vars_declarations.keys():
                     raise Exception(f"[:?]Redeclaration ID {p[2]}")
 
-                self.declarations[p[2].name] = p[2]
+                self.vars_declarations[p[2].name] = p[2]
                 return
             p[0].code.append(p[2])
 
@@ -75,31 +76,31 @@ class CodeParser:
 
     def p_code_goto(self, p):
         """code  : goto ID ';'"""
-        if p[2] not in self.declarations.keys():
+        if p[2] not in self.vars_declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[2]}")
         p[0] = ASTGoto(p[2])
 
     def p_code_in(self, p):
         """code  : in ID ';'"""
-        if p[2] not in self.declarations.keys():
+        if p[2] not in self.vars_declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[2]}")
         p[0] = ASTIn(p[2])
 
     def p_code_out(self, p):
         """code  : out ID ';'"""
-        if p[2] not in self.declarations.keys():
+        if p[2] not in self.vars_declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[2]}")
         p[0] = ASTOut(p[2])
 
     def p_left_operands_start(self, p):
         """left_operands     : ID"""
-        if p[1] not in self.declarations.keys():
+        if p[1] not in self.vars_declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[1]}")
         p[0] = [p[1]]
 
     def p_left_operands_id(self, p):
         """left_operands    : left_operands ',' ID"""
-        if p[3] not in self.declarations.keys():
+        if p[3] not in self.vars_declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[3]}")
         p[0] = p[1]
         p[0].append(p[3])
@@ -108,7 +109,7 @@ class CodeParser:
         """code     : left_operands '=' expr ';'
                     | left_operands IADD expr ';'
                     | left_operands ISUB expr ';'"""
-        decs = self.declarations.keys()
+        decs = self.vars_declarations.keys()
         if not all(i in decs for i in p[1]):
             Exception(f"[:{p.slice[1].lineno}]Unknown ID in left operands")
 
@@ -126,7 +127,7 @@ class CodeParser:
         """code     : left_operands '=' ID ';'
                     | left_operands IADD ID ';'
                     | left_operands ISUB ID ';'"""
-        decs = self.declarations.keys()
+        decs = self.vars_declarations.keys()
         if not all(i in decs for i in p[1]):
             Exception(f"[:{p.slice[1].lineno}]Unknown ID in left operands")
         if p[3] not in decs:
@@ -143,28 +144,28 @@ class CodeParser:
 
     def p_code_while(self, p):
         """code : while '(' ID ')' block_code"""
-        if p[3] not in self.declarations.keys():
+        if p[3] not in self.vars_declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[3]}")
 
         p[0] = ASTWhile(p[3], p[5])
 
     def p_astif(self, p):
         """astif : if '(' ID ')' block_code"""
-        if p[3] not in self.declarations.keys():
+        if p[3] not in self.vars_declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[3]}")
 
         p[0] = ASTIf(p[3], p[5])
 
     def p_astif_elif_if(self, p):
         """astif_elif : astif elif '(' ID ')' block_code"""
-        if p[4] not in self.declarations.keys():
+        if p[4] not in self.vars_declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[4]}")
 
         p[0] = ASTIfElif([(p[1].test_var, p[1].code), (p[4], p[6])])
 
     def p_astif_elif_elif(self, p):
         """astif_elif : astif_elif elif '(' ID ')' block_code"""
-        if p[4] not in self.declarations.keys():
+        if p[4] not in self.vars_declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[4]}")
         p[0] = p[1]
         p[0].data.append((p[4], p[6].code))
