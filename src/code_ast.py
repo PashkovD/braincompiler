@@ -270,9 +270,11 @@ class ASTIf(IProcessable):
         data += [Goto(self.test_var), "["]
         for i in self.code:
             data += i.process(declarations, stack)
-        data += ASTSetVar(["__copy_var"], self.test_var).process(declarations, stack)
+        copy_var = stack.push()
+        data += ASTSetVar([copy_var], self.test_var).process(declarations, stack)
         data += [Goto(self.test_var), "]"]
-        data += ASTSetVar([self.test_var], "__copy_var").process(declarations, stack)
+        data += ASTSetVar([self.test_var], copy_var).process(declarations, stack)
+        stack.pop(copy_var)
         return data
 
 
@@ -288,15 +290,17 @@ class ASTIfElif(IProcessable):
 
     def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         data = []
-        data += ASTSetInt(["__else_flag"], 1).process(declarations, stack)
-        data += ASTIf(self.data[0][0], self.data[0][1] + [ASTSetInt(["__else_flag"], 0)]).process(declarations, stack)
+        else_flag = stack.push()
+        data += ASTSetInt([else_flag], 1).process(declarations, stack)
+        data += ASTIf(self.data[0][0], self.data[0][1] + [ASTSetInt([else_flag], 0)]).process(declarations, stack)
         for i in self.data[1:]:
             data += ASTIf(
-                "__else_flag",
-                [ASTIf(i[0], i[1] + [ASTSetInt(["__else_flag"], 0)])]
+                else_flag,
+                [ASTIf(i[0], i[1] + [ASTSetInt([else_flag], 0)])]
             ).process(declarations, stack)
         if self.code_else is not None:
-            data += ASTIf("__else_flag", self.code_else + [ASTSetInt(["__else_flag"], 0)]).process(declarations, stack)
+            data += ASTIf(else_flag, self.code_else + [ASTSetInt([else_flag], 0)]).process(declarations, stack)
+        stack.pop(else_flag)
         return data
 
 
@@ -317,4 +321,6 @@ class ASTFile:
 
         for i in self.declarations.values():
             declarations += i.process()
+        if stack.current != 0:
+            raise Exception("Stack not empty at end")
         return declarations + code, {stack.name: stack} | self.declarations

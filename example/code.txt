@@ -2,6 +2,7 @@ int a = "a";
 int b = "b";
 int c = "\n";
 int d = 0;
+int True = 1;
 
 while(True){
     out b;

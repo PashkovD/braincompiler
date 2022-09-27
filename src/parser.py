@@ -9,10 +9,7 @@ from .code_ast import ASTIntDeclaration, ASTFile, ASTAssembler, ASTGoto, ASTOut,
 
 class CodeParser:
     def __init__(self, tokens, literals, **kwargs):
-        self.vars_declarations: Dict[str, IDeclaration] = OrderedDict({
-            "__copy_var": ASTIntDeclaration("__copy_var", 0),
-            "__else_flag": ASTIntDeclaration("__else_flag", 0),
-        })
+        self.vars_declarations: Dict[str, IDeclaration] = OrderedDict({})
 
         self.tokens = tokens
         self.literals = literals
