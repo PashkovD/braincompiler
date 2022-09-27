@@ -3,22 +3,7 @@ from argparse import ArgumentParser
 from pathlib import PurePosixPath
 from typing import List
 
-from .code_ast import ASTFile
-from .lexer import CodeLexer
-from .linker import CodeLinker
-from .parser import CodeParser
-
-
-def compile_code(data: str) -> str:
-    lexer = CodeLexer()
-    parser = CodeParser(lexer.tokens, lexer.literals)
-
-    a: ASTFile = (parser.parse(input=data + "\n", lexer=lexer.lexer))
-
-    if not parser.parser.errorok:
-        raise Exception
-
-    return CodeLinker(a).process()
+from src import compile_code
 
 
 def main(args: List[str]):

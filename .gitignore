@@ -1,4 +1,4 @@
 /.idea/
 
-parser.out
-parsetab.py
+/src/parser.out
+/src/parsetab.py
