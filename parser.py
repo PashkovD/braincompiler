@@ -3,8 +3,8 @@ from typing import Dict
 
 from ply import yacc
 
-from code_ast import ASTIntDeclaration, ASTFile, ASTAssembler, ASTGoto, ASTOut, ASTIn, ASTSetInt, ASTSetVar, ASTIaddInt, \
-    ASTIsubInt, ASTIaddVar, ASTIsubVar, ASTWhile, ASTIf, ASTIfElif, IDeclaration, ASTStringDeclaration
+from .code_ast import ASTIntDeclaration, ASTFile, ASTAssembler, ASTGoto, ASTOut, ASTIn, ASTSetInt, ASTSetVar, \
+    ASTIaddInt, ASTIsubInt, ASTIaddVar, ASTIsubVar, ASTWhile, ASTIf, ASTIfElif, IDeclaration, ASTStringDeclaration
 
 
 class CodeParser:
@@ -194,4 +194,3 @@ class CodeParser:
     def p_id_index(self, p):
         """id   : id '[' INTEGER ']'"""
         p[0] = f"{p[1]}[{p[3]}]"
-

@@ -3,10 +3,10 @@ from argparse import ArgumentParser
 from pathlib import PurePosixPath
 from typing import List
 
-from code_ast import ASTFile
-from lexer import CodeLexer
-from linker import CodeLinker
-from parser import CodeParser
+from .code_ast import ASTFile
+from .lexer import CodeLexer
+from .linker import CodeLinker
+from .parser import CodeParser
 
 
 def compile_code(data: str) -> str:

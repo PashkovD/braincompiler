@@ -1,8 +1,8 @@
 from typing import Dict
 
-from code_ast import ASTFile
-from goto import Goto
-from util import bf_move
+from .code_ast import ASTFile
+from .goto import Goto
+from .util import bf_move
 
 
 class CodeLinker:

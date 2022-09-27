@@ -1,7 +1,7 @@
 from typing import List, Union, Tuple, Dict
 
-from goto import Goto
-from util import bf_add
+from .goto import Goto
+from .util import bf_add
 
 
 class IDeclaration:
