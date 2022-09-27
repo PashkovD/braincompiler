@@ -16,8 +16,39 @@ class IDeclaration:
         raise Exception
 
 
+class Stack(IDeclaration):
+    def __init__(self, name: str):
+        super(Stack, self).__init__(name, 0)
+        self.size: int = 0
+        self.current: int = 0
+
+    def process(self) -> List[Union[Goto, str]]:
+        data: List[Union[Goto, str]] = []
+        for i in range(self.size):
+            data += [Goto(f"{self.name}[{i}]"), "[-]"]
+        return data
+
+    def keys(self, pos: int) -> Tuple[Dict[str, int], int]:
+        data: Dict[str, int] = {}
+        for i in range(self.size):
+            data[f"{self.name}[{i}]"] = pos + i
+        return data, self.size
+
+    def push(self) -> str:
+        self.current += 1
+        self.size = max(self.size, self.current)
+        return f"{self.name}[{self.current - 1}]"
+
+    def pop(self, name: str):
+        self.current -= 1
+        if name != f"{self.name}[{self.current}]":
+            raise Exception(f"Incorrect var in stack {repr(name)}")
+        if self.current < 0:
+            raise Exception(f"Incorrect var in stack {repr(name)}")
+
+
 class IProcessable:
-    def process(self, declarations: Dict[str, IDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         raise Exception
 
 
@@ -70,7 +101,7 @@ class ASTAssembler(IProcessable):
     def __str__(self):
         return f"asm({repr(self.code)})"
 
-    def process(self, declarations: Dict[str, IDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         return [self.code]
 
 
@@ -81,7 +112,7 @@ class ASTGoto(IProcessable):
     def __str__(self):
         return f"goto {self.name}"
 
-    def process(self, declarations: Dict[str, IDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         return [Goto(self.name)]
 
 
@@ -92,7 +123,7 @@ class ASTOut(IProcessable):
     def __str__(self):
         return f"out {self.name}"
 
-    def process(self, declarations: Dict[str, IDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         return [Goto(self.name), "."]
 
 
@@ -103,7 +134,7 @@ class ASTIn(IProcessable):
     def __str__(self):
         return f"out {self.name}"
 
-    def process(self, declarations: Dict[str, IDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         return [Goto(self.name), ","]
 
 
@@ -115,7 +146,7 @@ class ASTIaddInt(IProcessable):
     def __str__(self):
         return f"{str(self.names)[1:-1]} += {self.num}"
 
-    def process(self, declarations: Dict[str, IDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         data = []
         for i in self.names:
             data += [Goto(i), bf_add(self.num)]
@@ -130,7 +161,7 @@ class ASTIsubInt(IProcessable):
     def __str__(self):
         return f"{str(self.names)[1:-1]} -= {self.num}"
 
-    def process(self, declarations: Dict[str, IDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         data = []
         for i in self.names:
             data += [Goto(i), bf_add(-self.num)]
@@ -145,7 +176,7 @@ class ASTSetInt(IProcessable):
     def __str__(self):
         return f"{str(self.names)[1:-1]} = {self.num}"
 
-    def process(self, declarations: Dict[str, IDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         data = []
         for i in self.names:
             data += [Goto(i), "[-]", bf_add(self.num)]
@@ -160,7 +191,7 @@ class ASTIaddVar(IProcessable):
     def __str__(self):
         return f"{str(self.names)[1:-1]} += {self.right}"
 
-    def process(self, declarations: Dict[str, IDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         data = []
         data += [Goto(self.right), "[", "-"]
         for i in self.names:
@@ -178,7 +209,7 @@ class ASTIsubVar(IProcessable):
     def __str__(self):
         return f"{str(self.names)[1:-1]} -= {self.right}"
 
-    def process(self, declarations: Dict[str, IDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         data = []
         data += [Goto(self.right), "[", "-"]
         for i in self.names:
@@ -196,7 +227,7 @@ class ASTSetVar(IProcessable):
     def __str__(self):
         return f"{str(self.names)[1:-1]} = {self.right}"
 
-    def process(self, declarations: Dict[str, IDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         data = []
         for i in self.names:
             data += [Goto(i), "[-]"]
@@ -217,11 +248,11 @@ class ASTWhile(IProcessable):
     def __str__(self):
         return f"while({self.test_var})"
 
-    def process(self, declarations: Dict[str, IDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         data = []
         data += [Goto(self.test_var), "["]
         for i in self.code:
-            data += i.process(declarations)
+            data += i.process(declarations, stack)
         data += [Goto(self.test_var), "]"]
         return data
 
@@ -234,14 +265,14 @@ class ASTIf(IProcessable):
     def __str__(self):
         return f"if({self.test_var})"
 
-    def process(self, declarations: Dict[str, IDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         data = []
         data += [Goto(self.test_var), "["]
         for i in self.code:
-            data += i.process(declarations)
-        data += ASTSetVar(["__copy_var"], self.test_var).process(declarations)
+            data += i.process(declarations, stack)
+        data += ASTSetVar(["__copy_var"], self.test_var).process(declarations, stack)
         data += [Goto(self.test_var), "]"]
-        data += ASTSetVar([self.test_var], "__copy_var").process(declarations)
+        data += ASTSetVar([self.test_var], "__copy_var").process(declarations, stack)
         return data
 
 
@@ -255,16 +286,17 @@ class ASTIfElif(IProcessable):
                "".join(f"elif({i[0]})" for i in self.data) + \
                f"else" if self.code_else is not None else ""
 
-    def process(self, declarations: Dict[str, IDeclaration]) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         data = []
-        data += ASTSetInt(["__else_flag"], 1).process(declarations)
-        data += ASTIf(self.data[0][0], self.data[0][1] + [ASTSetInt(["__else_flag"], 0)]).process(declarations)
+        data += ASTSetInt(["__else_flag"], 1).process(declarations, stack)
+        data += ASTIf(self.data[0][0], self.data[0][1] + [ASTSetInt(["__else_flag"], 0)]).process(declarations, stack)
         for i in self.data[1:]:
-            data += ASTIf("__else_flag",
-                          [ASTIf(i[0], i[1] + [ASTSetInt(["__else_flag"], 0)])]
-                          ).process(declarations)
+            data += ASTIf(
+                "__else_flag",
+                [ASTIf(i[0], i[1] + [ASTSetInt(["__else_flag"], 0)])]
+            ).process(declarations, stack)
         if self.code_else is not None:
-            data += ASTIf("__else_flag", self.code_else + [ASTSetInt(["__else_flag"], 0)]).process(declarations)
+            data += ASTIf("__else_flag", self.code_else + [ASTSetInt(["__else_flag"], 0)]).process(declarations, stack)
         return data
 
 
@@ -273,11 +305,16 @@ class ASTFile:
         self.declarations: Dict[str, IDeclaration] = {}
         self.code: List[IProcessable] = []
 
-    def process(self) -> List[Union[Goto, str]]:
-        data: List[Union[Goto, str]] = []
-        for i in self.declarations.values():
-            data += i.process()
+    def process(self) -> Tuple[List[Union[Goto, str]], Dict[str, IDeclaration]]:
+        code: List[Union[Goto, str]] = []
+        declarations: List[Union[Goto, str]] = []
+        stack: Stack = Stack("__stack")
 
         for i in self.code:
-            data += i.process(self.declarations)
-        return data
+            code += i.process(self.declarations, stack)
+
+        declarations += stack.process()
+
+        for i in self.declarations.values():
+            declarations += i.process()
+        return declarations + code, {stack.name: stack} | self.declarations

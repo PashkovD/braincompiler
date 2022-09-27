@@ -11,14 +11,15 @@ class CodeLinker:
 
     def process(self) -> str:
         pos = 0
+        code, declarations = self.code.process()
         decls: Dict[str, int] = {}
-        for i in self.code.declarations.values():
+        for i in declarations.values():
             data2, size = i.keys(pos)
             pos += size
             decls.update(data2)
         pos = 0
         data = ""
-        for i in self.code.process():
+        for i in code:
             if isinstance(i, str):
                 data += i
                 continue
