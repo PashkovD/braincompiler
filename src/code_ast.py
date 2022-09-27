@@ -193,11 +193,16 @@ class ASTIaddVar(IProcessable):
 
     def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         data = []
+        copy_var = stack.push()
+        data += [Goto(copy_var), "[-]"]
         data += [Goto(self.right), "[", "-"]
         for i in self.names:
             data += [Goto(i), "+"]
-
+        data += [Goto(copy_var), "+"]
         data += [Goto(self.right), "]"]
+
+        data += [Goto(copy_var), "[-", Goto(self.right), "+", Goto(copy_var), "]"]
+        stack.pop(copy_var)
         return data
 
 
@@ -211,11 +216,16 @@ class ASTIsubVar(IProcessable):
 
     def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         data = []
+        copy_var = stack.push()
+        data += [Goto(copy_var), "[-]"]
         data += [Goto(self.right), "[", "-"]
         for i in self.names:
             data += [Goto(i), "-"]
-
+        data += [Goto(copy_var), "+"]
         data += [Goto(self.right), "]"]
+
+        data += [Goto(copy_var), "[-", Goto(self.right), "+", Goto(copy_var), "]"]
+        stack.pop(copy_var)
         return data
 
 
@@ -232,11 +242,16 @@ class ASTSetVar(IProcessable):
         for i in self.names:
             data += [Goto(i), "[-]"]
 
+        copy_var = stack.push()
+        data += [Goto(copy_var), "[-]"]
         data += [Goto(self.right), "[", "-"]
         for i in self.names:
             data += [Goto(i), "+"]
-
+        data += [Goto(copy_var), "+"]
         data += [Goto(self.right), "]"]
+
+        data += [Goto(copy_var), "[-", Goto(self.right), "+", Goto(copy_var), "]"]
+        stack.pop(copy_var)
         return data
 
 
@@ -272,6 +287,7 @@ class ASTIf(IProcessable):
             data += i.process(declarations, stack)
         copy_var = stack.push()
         data += ASTSetVar([copy_var], self.test_var).process(declarations, stack)
+        data += ASTSetInt([self.test_var], 0).process(declarations, stack)
         data += [Goto(self.test_var), "]"]
         data += ASTSetVar([self.test_var], copy_var).process(declarations, stack)
         stack.pop(copy_var)
