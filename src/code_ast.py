@@ -282,14 +282,9 @@ class ASTIf(IProcessable):
 
     def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
         data = []
-        data += [Goto(self.test_var), "["]
-        for i in self.code:
-            data += i.process(declarations, stack)
         copy_var = stack.push()
         data += ASTSetVar([copy_var], self.test_var).process(declarations, stack)
-        data += ASTSetInt([self.test_var], 0).process(declarations, stack)
-        data += [Goto(self.test_var), "]"]
-        data += ASTSetVar([self.test_var], copy_var).process(declarations, stack)
+        data += ASTWhile(copy_var, self.code + [ASTSetInt([copy_var], 0)]).process(declarations, stack)
         stack.pop(copy_var)
         return data
 
@@ -315,8 +310,28 @@ class ASTIfElif(IProcessable):
                 [ASTIf(i[0], i[1] + [ASTSetInt([else_flag], 0)])]
             ).process(declarations, stack)
         if self.code_else is not None:
-            data += ASTIf(else_flag, self.code_else + [ASTSetInt([else_flag], 0)]).process(declarations, stack)
+            data += ASTIf(else_flag, self.code_else).process(declarations, stack)
         stack.pop(else_flag)
+        return data
+
+
+class ASTCase(IProcessable):
+    def __init__(self, test_var: str, code: List[Tuple[int, List[IProcessable]]]):
+        self.test_var: str = test_var
+        self.code: List[Tuple[int, List[IProcessable]]] = code
+
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+        data: List[Union[Goto, str]] = []
+        if len(self.code) != 0:
+            copy_var = stack.push()
+            data += ASTSetVar([copy_var], self.test_var).process(declarations, stack)
+            last = 0
+            for i in self.code:
+                data += ASTIsubInt([copy_var], i[0]-last).process(declarations, stack)
+                data += ASTIfElif([(copy_var, [])], code_else=i[1]).process(declarations, stack)
+                last = i[0]
+
+            stack.pop(copy_var)
         return data
 
 

@@ -5,14 +5,14 @@ from ply import lex
 
 class CodeLexer:
     keywords = (
-        'while', 'if', 'elif', 'else', 'in', 'out', 'goto', 'asm', 'int', 'string',
+        'while', 'if', 'elif', 'else', 'in', 'out', 'goto', 'asm', 'int', 'string', 'case'
     )
     tokens = keywords + (
         'INTEGER', 'STRING',
         'IADD', 'ISUB',
         'ID', 'NEWLINE',
     )
-    literals = ['=', '+', '-', '(', ')', '{', '}', '[', ']', ',', ';', '*']
+    literals = ['=', '+', '-', '(', ')', '{', '}', '[', ']', ',', ';', '*', ':']
 
     t_ignore = ' \t'
     t_ignore_COMMENT = r'\#.*'

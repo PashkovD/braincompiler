@@ -4,7 +4,8 @@ from typing import Dict
 from ply import yacc
 
 from .code_ast import ASTIntDeclaration, ASTFile, ASTAssembler, ASTGoto, ASTOut, ASTIn, ASTSetInt, ASTSetVar, \
-    ASTIaddInt, ASTIsubInt, ASTIaddVar, ASTIsubVar, ASTWhile, ASTIf, ASTIfElif, IDeclaration, ASTStringDeclaration
+    ASTIaddInt, ASTIsubInt, ASTIaddVar, ASTIsubVar, ASTWhile, ASTIf, ASTIfElif, IDeclaration, ASTStringDeclaration, \
+    ASTCase
 
 
 class CodeParser:
@@ -68,7 +69,7 @@ class CodeParser:
 
     def p_code_asm(self, p):
         """code : asm '(' STRING ')' ';'"""
-        if not all(i in "+-[]<>.," for i in p[3]):
+        if not all(i in "+-[]<>.,#" for i in p[3]):
             raise Exception(f"[:{p.slice[1].lineno}]Incorrect symbol in asm line")
         p[0] = ASTAssembler(p[3])
 
@@ -151,6 +152,19 @@ class CodeParser:
         """code : astif
                 | astif_elif
                 | astif_else"""
+        p[0] = p[1]
+
+    def p_astcase_start(self, p):
+        """astcase : case '(' id ')' '{'"""
+        p[0] = ASTCase(p[3], [])
+
+    def p_astcase_code(self, p):
+        """astcase : astcase expr ':' block_code"""
+        p[0] = p[1]
+        p[0].code.append((p[2], p[4]))
+
+    def p_code_case(self, p):
+        """code : astcase '}'"""
         p[0] = p[1]
 
     def p_expr_integer(self, p):
