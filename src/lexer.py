@@ -9,7 +9,7 @@ class CodeLexer:
     )
     tokens = keywords + (
         'INTEGER', 'STRING',
-        'IADD', 'ISUB',
+        'IADD', 'ISUB', 'IDIV', 'IMOD',
         'ID', 'NEWLINE',
     )
     literals = ['=', '+', '-', '(', ')', '{', '}', '[', ']', ',', ';', '*', ':']
@@ -18,6 +18,8 @@ class CodeLexer:
     t_ignore_COMMENT = r'\#.*'
     t_IADD = r'\+='
     t_ISUB = r'\-='
+    t_IDIV = r'\/='
+    t_IMOD = r'\%='
 
     def __init__(self, **kwargs):
         self.lexer = lex.lex(module=self, **kwargs)

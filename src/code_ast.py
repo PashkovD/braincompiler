@@ -327,13 +327,148 @@ class ASTCase(IProcessable):
             data += ASTSetVar([copy_var], self.test_var).process(declarations, stack)
             last = 0
             for i in self.code:
-                data += ASTIsubInt([copy_var], i[0]-last).process(declarations, stack)
+                data += ASTIsubInt([copy_var], i[0] - last).process(declarations, stack)
                 data += ASTIfElif([(copy_var, [])], code_else=i[1]).process(declarations, stack)
                 last = i[0]
 
             stack.pop(copy_var)
         return data
 
+
+class ASTIdivVar(IProcessable):
+    def __init__(self, names: List[str], right: str):
+        self.names: List[str] = names
+        self.right: str = right
+
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+        data: List[Union[Goto, str]] = []
+        for left in self.names:
+            work = stack.push()
+            data += ASTSetInt([work], 1).process(declarations, stack)
+            counter = stack.push()
+            data += ASTSetInt([counter], 0).process(declarations, stack)
+            left_var = stack.push()
+            data += ASTSetVar([left_var], left).process(declarations, stack)
+            right_var = stack.push()
+
+            data += ASTWhile(work, [
+                ASTSetVar([right_var], self.right),
+                ASTWhile(right_var, [
+                    ASTIfElif([(left_var, [])], code_else=[
+                        ASTSetInt([work], 0),
+                        ASTSetInt([left_var, right_var], 1),
+                    ]),
+                    ASTIsubInt([left_var, right_var], 1),
+                ]),
+                ASTIaddInt([counter], 1),
+            ]).process(declarations, stack)
+            data += ASTIsubInt([counter], 1).process(declarations, stack)
+            data += ASTSetVar([left], counter).process(declarations, stack)
+            stack.pop(right_var)
+            stack.pop(left_var)
+            stack.pop(counter)
+            stack.pop(work)
+        return data
+
+
+class ASTImodVar(IProcessable):
+    def __init__(self, names: List[str], right: str):
+        self.names: List[str] = names
+        self.right: str = right
+
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+        data: List[Union[Goto, str]] = []
+        for left in self.names:
+            work = stack.push()
+            data += ASTSetInt([work], 1).process(declarations, stack)
+            left_var = stack.push()
+            data += ASTSetVar([left_var], left).process(declarations, stack)
+            right_var = stack.push()
+
+            data += ASTWhile(work, [
+                ASTSetVar([right_var], self.right),
+                ASTWhile(right_var, [
+                    ASTIfElif([(left_var, [])], code_else=[
+                        ASTSetInt([work], 0),
+                        ASTSetVar([left], self.right),
+                        ASTIsubVar([left], right_var),
+                        ASTSetInt([left_var, right_var], 1),
+                    ]),
+                    ASTIsubInt([left_var, right_var], 1),
+                ]),
+            ]).process(declarations, stack)
+            stack.pop(right_var)
+            stack.pop(left_var)
+            stack.pop(work)
+        return data
+
+
+class ASTIdivInt(IProcessable):
+    def __init__(self, names: List[str], num: int):
+        self.names: List[str] = names
+        self.num: int = num
+
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+        data: List[Union[Goto, str]] = []
+        for left in self.names:
+            work = stack.push()
+            data += ASTSetInt([work], 1).process(declarations, stack)
+            counter = stack.push()
+            data += ASTSetInt([counter], 0).process(declarations, stack)
+            left_var = stack.push()
+            data += ASTSetVar([left_var], left).process(declarations, stack)
+            right_var = stack.push()
+
+            data += ASTWhile(work, [
+                ASTSetInt([right_var], self.num),
+                ASTWhile(right_var, [
+                    ASTIfElif([(left_var, [])], code_else=[
+                        ASTSetInt([work], 0),
+                        ASTSetInt([left_var, right_var], 1),
+                    ]),
+                    ASTIsubInt([left_var, right_var], 1),
+                ]),
+                ASTIaddInt([counter], 1),
+            ]).process(declarations, stack)
+            data += ASTIsubInt([counter], 1).process(declarations, stack)
+            data += ASTSetVar([left], counter).process(declarations, stack)
+            stack.pop(right_var)
+            stack.pop(left_var)
+            stack.pop(counter)
+            stack.pop(work)
+        return data
+
+
+class ASTImodInt(IProcessable):
+    def __init__(self, names: List[str], num: int):
+        self.names: List[str] = names
+        self.num: int = num
+
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+        data: List[Union[Goto, str]] = []
+        for left in self.names:
+            work = stack.push()
+            data += ASTSetInt([work], 1).process(declarations, stack)
+            left_var = stack.push()
+            data += ASTSetVar([left_var], left).process(declarations, stack)
+            right_var = stack.push()
+
+            data += ASTWhile(work, [
+                ASTSetInt([right_var], self.num),
+                ASTWhile(right_var, [
+                    ASTIfElif([(left_var, [])], code_else=[
+                        ASTSetInt([work], 0),
+                        ASTSetInt([left], self.num),
+                        ASTIsubVar([left], right_var),
+                        ASTSetInt([left_var, right_var], 1),
+                    ]),
+                    ASTIsubInt([left_var, right_var], 1),
+                ]),
+            ]).process(declarations, stack)
+            stack.pop(right_var)
+            stack.pop(left_var)
+            stack.pop(work)
+        return data
 
 class ASTFile:
     def __init__(self):

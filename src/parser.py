@@ -3,9 +3,7 @@ from typing import Dict
 
 from ply import yacc
 
-from .code_ast import ASTIntDeclaration, ASTFile, ASTAssembler, ASTGoto, ASTOut, ASTIn, ASTSetInt, ASTSetVar, \
-    ASTIaddInt, ASTIsubInt, ASTIaddVar, ASTIsubVar, ASTWhile, ASTIf, ASTIfElif, IDeclaration, ASTStringDeclaration, \
-    ASTCase
+from .code_ast import *
 
 
 class CodeParser:
@@ -97,7 +95,9 @@ class CodeParser:
     def p_code_set_int(self, p):
         """code     : left_operands '=' expr ';'
                     | left_operands IADD expr ';'
-                    | left_operands ISUB expr ';'"""
+                    | left_operands ISUB expr ';'
+                    | left_operands IDIV expr ';'
+                    | left_operands IMOD expr ';'"""
         match p[2]:
             case "=":
                 p[0] = ASTSetInt(p[1], p[3])
@@ -105,13 +105,19 @@ class CodeParser:
                 p[0] = ASTIaddInt(p[1], p[3])
             case "-=":
                 p[0] = ASTIsubInt(p[1], p[3])
+            case "/=":
+                p[0] = ASTIdivInt(p[1], p[3])
+            case "%=":
+                p[0] = ASTImodInt(p[1], p[3])
             case _ as e:
                 raise Exception(e)
 
     def p_code_set_var(self, p):
         """code     : left_operands '=' id ';'
                     | left_operands IADD id ';'
-                    | left_operands ISUB id ';'"""
+                    | left_operands ISUB id ';'
+                    | left_operands IDIV id ';'
+                    | left_operands IMOD id ';'"""
         match p[2]:
             case "=":
                 p[0] = ASTSetVar(p[1], p[3])
@@ -119,6 +125,10 @@ class CodeParser:
                 p[0] = ASTIaddVar(p[1], p[3])
             case "-=":
                 p[0] = ASTIsubVar(p[1], p[3])
+            case "/=":
+                p[0] = ASTIdivVar(p[1], p[3])
+            case "%=":
+                p[0] = ASTImodVar(p[1], p[3])
             case _ as e:
                 raise Exception(e)
 
