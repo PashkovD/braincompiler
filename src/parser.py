@@ -83,21 +83,30 @@ class CodeParser:
         """code  : out id ';'"""
         p[0] = ASTOut(p[2])
 
-    def p_left_operands_start(self, p):
-        """left_operands     : id"""
+    def p_id_list_start(self, p):
+        """id_list     : id"""
         p[0] = [p[1]]
 
-    def p_left_operands_id(self, p):
-        """left_operands    : left_operands ',' id"""
+    def p_id_list_id(self, p):
+        """id_list    : id_list ',' id"""
+        p[0] = p[1]
+        p[0].append(p[3])
+
+    def p_expr_list_start(self, p):
+        """expr_list     : expr"""
+        p[0] = [p[1]]
+
+    def p_expr_list_id(self, p):
+        """expr_list    : expr_list ',' expr"""
         p[0] = p[1]
         p[0].append(p[3])
 
     def p_code_set_int(self, p):
-        """code     : left_operands '=' expr ';'
-                    | left_operands IADD expr ';'
-                    | left_operands ISUB expr ';'
-                    | left_operands IDIV expr ';'
-                    | left_operands IMOD expr ';'"""
+        """code     : id_list '=' expr ';'
+                    | id_list IADD expr ';'
+                    | id_list ISUB expr ';'
+                    | id_list IDIV expr ';'
+                    | id_list IMOD expr ';'"""
         match p[2]:
             case "=":
                 p[0] = ASTSetInt(p[1], p[3])
@@ -113,11 +122,11 @@ class CodeParser:
                 raise Exception(e)
 
     def p_code_set_var(self, p):
-        """code     : left_operands '=' id ';'
-                    | left_operands IADD id ';'
-                    | left_operands ISUB id ';'
-                    | left_operands IDIV id ';'
-                    | left_operands IMOD id ';'"""
+        """code     : id_list '=' id ';'
+                    | id_list IADD id ';'
+                    | id_list ISUB id ';'
+                    | id_list IDIV id ';'
+                    | id_list IMOD id ';'"""
         match p[2]:
             case "=":
                 p[0] = ASTSetVar(p[1], p[3])
@@ -169,9 +178,10 @@ class CodeParser:
         p[0] = ASTCase(p[3], [])
 
     def p_astcase_code(self, p):
-        """astcase : astcase expr ':' block_code"""
+        """astcase : astcase expr_list ':' block_code"""
         p[0] = p[1]
-        p[0].code.append((p[2], p[4]))
+        for i in p[2]:
+            p[0].code.append((i, p[4]))
 
     def p_code_case(self, p):
         """code : astcase '}'"""
