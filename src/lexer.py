@@ -47,7 +47,7 @@ class CodeLexer:
         # return t
 
     def t_error(self, t):
-        raise Exception("Illegal character %s" % t.value[0])
+        raise Exception(f"[:{t.lineno}]Illegal character {t.value[0]}")
 
     def test(self, data):
         self.lexer.input(data)
