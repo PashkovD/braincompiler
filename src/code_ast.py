@@ -513,9 +513,31 @@ class ASTImulInt(IProcessable):
         for left in self.names:
             copy_var = stack.push()
             data += ASTSetVar([copy_var], left).process(declarations, stack)
-            data += ASTIaddVar([left], copy_var).process(declarations, stack) * (self.num-1)
+            data += ASTIaddVar([left], copy_var).process(declarations, stack) * (self.num - 1)
             stack.pop(copy_var)
         return data
+
+
+class ASTIlshiftInt(IProcessable):
+    def __init__(self, names: List[str], num: int):
+        self.names: List[str] = names
+        self.num: int = num
+
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+        if self.num == 0:
+            return ASTSetInt(self.names, 0).process(declarations, stack)
+        return ASTImulInt(self.names, 2 ** self.num).process(declarations, stack)
+
+
+class ASTIrshiftInt(IProcessable):
+    def __init__(self, names: List[str], num: int):
+        self.names: List[str] = names
+        self.num: int = num
+
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+        if self.num == 0:
+            return []
+        return ASTIdivInt(self.names, 2 ** self.num).process(declarations, stack)
 
 
 class ASTFile:

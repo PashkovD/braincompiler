@@ -1,5 +1,6 @@
 int a = 6;
 int b = 5;
 
-a *= b;
+a <<= 2;
+b >>= 1;
 goto a;
