@@ -26,8 +26,8 @@ class CodeLexer:
 
     def t_STRING(self, t):
         r'\".*?\"'
-        t.value = t.value[1:-1]
-        t.value = codecs.escape_decode(bytes(t.value, "utf-8"))[0].decode("utf-8")
+        import ast
+        t.value = ast.literal_eval("b" + t.value)
         return t
 
     def t_ID(self, t):

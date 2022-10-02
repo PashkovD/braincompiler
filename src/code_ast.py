@@ -70,11 +70,11 @@ class ASTIntDeclaration(IDeclaration):
 
 
 class ASTStringDeclaration(IDeclaration):
-    def __init__(self, name: str, start: str):
-        if not isinstance(start, str):
+    def __init__(self, name: str, start: bytes):
+        if not isinstance(start, bytes):
             raise Exception(f"Incorrect type of start value of {name}")
         self.start: bytes
-        super(ASTStringDeclaration, self).__init__(name, bytes(start, "utf-8"))
+        super(ASTStringDeclaration, self).__init__(name, start)
 
     def __str__(self):
         return f"string {self.name}={repr(self.start)}"
