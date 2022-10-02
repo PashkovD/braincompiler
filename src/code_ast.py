@@ -259,6 +259,7 @@ class ASTWhile(IProcessable):
     def __init__(self, test_var: str, code: List[IProcessable]):
         self.test_var: str = test_var
         self.code: List[IProcessable] = code
+        assert all(isinstance(i, IProcessable) for i in self.code)
 
     def __str__(self):
         return f"while({self.test_var})"
@@ -469,6 +470,53 @@ class ASTImodInt(IProcessable):
             stack.pop(left_var)
             stack.pop(work)
         return data
+
+
+class ASTImulVar(IProcessable):
+    def __init__(self, names: List[str], right: str):
+        self.names: List[str] = names
+        self.right: str = right
+
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+        data: List[Union[Goto, str]] = []
+        for left in self.names:
+            copy_var = stack.push()
+            copy_var2 = stack.push()
+            data += ASTSetVar([copy_var], left).process(declarations, stack)
+            data += ASTSetVar([copy_var2], self.right).process(declarations, stack)
+            data += ASTSetInt([left], 0).process(declarations, stack)
+            data += ASTWhile(copy_var2, [
+                ASTIsubInt([copy_var2], 1),
+                ASTIaddVar([left], copy_var),
+            ]).process(declarations, stack)
+            stack.pop(copy_var2)
+            stack.pop(copy_var)
+        return data
+
+
+class ASTImulInt(IProcessable):
+    def __init__(self, names: List[str], num: int):
+        self.names: List[str] = names
+        self.num: int = num
+
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+        if self.num == 0:
+            return ASTSetInt(self.names, self.num).process(declarations, stack)
+        data: List[Union[Goto, str]] = []
+        if abs(self.num) >= 16:
+            copy_var = stack.push()
+            data += ASTSetInt([copy_var], self.num).process(declarations, stack)
+            data += ASTImulVar(self.names, copy_var).process(declarations, stack)
+            stack.pop(copy_var)
+            return data
+
+        for left in self.names:
+            copy_var = stack.push()
+            data += ASTSetVar([copy_var], left).process(declarations, stack)
+            data += ASTIaddVar([left], copy_var).process(declarations, stack) * (self.num-1)
+            stack.pop(copy_var)
+        return data
+
 
 class ASTFile:
     def __init__(self):

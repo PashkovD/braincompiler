@@ -1,11 +1,5 @@
-int a = 251;
-string b = "012345";
+int a = 6;
+int b = 5;
 
-case(a){
-    1,2,3,4:{
-        out b[0];
-    }
-    5,6:{
-        out b[2];
-    }
-}
+a *= b;
+goto a;

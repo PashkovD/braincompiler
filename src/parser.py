@@ -106,7 +106,8 @@ class CodeParser:
                     | id_list IADD expr ';'
                     | id_list ISUB expr ';'
                     | id_list IDIV expr ';'
-                    | id_list IMOD expr ';'"""
+                    | id_list IMOD expr ';'
+                    | id_list IMUL expr ';'"""
         match p[2]:
             case "=":
                 p[0] = ASTSetInt(p[1], p[3])
@@ -118,6 +119,8 @@ class CodeParser:
                 p[0] = ASTIdivInt(p[1], p[3])
             case "%=":
                 p[0] = ASTImodInt(p[1], p[3])
+            case "*=":
+                p[0] = ASTImulInt(p[1], p[3])
             case _ as e:
                 raise Exception(e)
 
@@ -126,7 +129,8 @@ class CodeParser:
                     | id_list IADD id ';'
                     | id_list ISUB id ';'
                     | id_list IDIV id ';'
-                    | id_list IMOD id ';'"""
+                    | id_list IMOD id ';'
+                    | id_list IMUL id ';'"""
         match p[2]:
             case "=":
                 p[0] = ASTSetVar(p[1], p[3])
@@ -138,6 +142,8 @@ class CodeParser:
                 p[0] = ASTIdivVar(p[1], p[3])
             case "%=":
                 p[0] = ASTImodVar(p[1], p[3])
+            case "*=":
+                p[0] = ASTImulVar(p[1], p[3])
             case _ as e:
                 raise Exception(e)
 
