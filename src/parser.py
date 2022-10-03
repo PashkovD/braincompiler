@@ -136,7 +136,9 @@ class CodeParser:
                     | id_list ISUB id ';'
                     | id_list IDIV id ';'
                     | id_list IMOD id ';'
-                    | id_list IMUL id ';'"""
+                    | id_list IMUL id ';'
+                    | id_list ILSHIFT id ';'
+                    | id_list IRSHIFT id ';'"""
         match p[2]:
             case "=":
                 p[0] = ASTSetVar(p[1], p[3])
@@ -150,6 +152,10 @@ class CodeParser:
                 p[0] = ASTImodVar(p[1], p[3])
             case "*=":
                 p[0] = ASTImulVar(p[1], p[3])
+            case "<<=":
+                p[0] = ASTIlshiftVar(p[1], p[3])
+            case ">>=":
+                p[0] = ASTIrshiftVar(p[1], p[3])
             case _ as e:
                 raise Exception(e)
 

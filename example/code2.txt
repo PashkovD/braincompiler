@@ -1,6 +1,6 @@
 int a = 6;
-int b = 5;
+int b = 6;
 
-a <<= 2;
-b >>= 1;
+a <<= b;
+a >>= b;
 goto a;

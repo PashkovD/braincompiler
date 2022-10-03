@@ -540,6 +540,40 @@ class ASTIrshiftInt(IProcessable):
         return ASTIdivInt(self.names, 2 ** self.num).process(declarations, stack)
 
 
+class ASTIlshiftVar(IProcessable):
+    def __init__(self, names: List[str], right: str):
+        self.names: List[str] = names
+        self.right: str = right
+
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+        data: List[Union[Goto, str]] = []
+        copy_var = stack.push()
+        data += ASTSetVar([copy_var], self.right).process(declarations, stack)
+        data += ASTWhile(copy_var, [
+            ASTIsubInt([copy_var], 1),
+            ASTIlshiftInt(self.names, 1),
+        ]).process(declarations, stack)
+        stack.pop(copy_var)
+        return data
+
+
+class ASTIrshiftVar(IProcessable):
+    def __init__(self, names: List[str], right: str):
+        self.names: List[str] = names
+        self.right: str = right
+
+    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+        data: List[Union[Goto, str]] = []
+        copy_var = stack.push()
+        data += ASTSetVar([copy_var], self.right).process(declarations, stack)
+        data += ASTWhile(copy_var, [
+            ASTIsubInt([copy_var], 1),
+            ASTIrshiftInt(self.names, 1),
+        ]).process(declarations, stack)
+        stack.pop(copy_var)
+        return data
+
+
 class ASTFile:
     def __init__(self):
         self.declarations: Dict[str, IDeclaration] = {}
