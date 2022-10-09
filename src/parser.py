@@ -71,6 +71,12 @@ class CodeParser:
             raise Exception(f"[:{p.slice[1].lineno}]Incorrect symbol in asm line")
         p[0] = ASTAssembler(p[3].decode("utf-8"))
 
+    def p_code_asm_mul(self, p):
+        """code : asm '(' STRING '*' expr ')' ';'"""
+        if not all(i in b"+-[]<>.,#" for i in p[3]):
+            raise Exception(f"[:{p.slice[1].lineno}]Incorrect symbol in asm line")
+        p[0] = ASTAssembler(p[3].decode("utf-8")*p[5])
+
     def p_code_goto(self, p):
         """code  : goto id ';'"""
         p[0] = ASTGoto(p[2])
