@@ -68,22 +68,17 @@ class ASTIaddVar(IProcessable):
         copy_var = stack.push()
         out.write(Goto(copy_var))
         out.write("[-]")
-        out.write(Goto(self.right))
-        out.write("[-")
-        for i in self.names:
-            out.write(Goto(i))
-            out.write("+")
-        out.write(Goto(copy_var))
-        out.write("+")
-        out.write(Goto(self.right))
-        out.write("]")
+        out.write(ASTWhile(self.right,
+                           [
+                               ASTIsubInt([self.right], 1),
+                               ASTIaddInt([copy_var], 1)
+                           ] + [ASTIsubInt([i], 1) for i in self.names]))
 
-        out.write(Goto(copy_var))
-        out.write("[-")
-        out.write(Goto(self.right))
-        out.write("+")
-        out.write(Goto(copy_var))
-        out.write("]")
+        out.write(ASTWhile(self.right,
+                           [
+                               ASTIsubInt([copy_var], 1),
+                               ASTIaddInt([self.right], 1)
+                           ]))
 
         stack.pop(copy_var)
 
