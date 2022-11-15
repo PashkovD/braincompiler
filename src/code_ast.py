@@ -2,13 +2,13 @@ from collections import OrderedDict
 from itertools import chain
 from typing import List, Union, Tuple, Dict
 
-from code_getters import IGetter, VarGetter, IndexGetter
-from code_stack import Stack
-from code_types import StringCodeType, IntCodeType
-from code_var import CodeVar
-from ideclaration import IDeclaration
-from iprocessable import IProcessable
+from .code_getters import IGetter, VarGetter, IndexGetter
+from .code_stack import Stack
+from .code_types import StringCodeType, IntCodeType
+from .code_var import CodeVar
 from .goto import Goto
+from .ideclaration import IDeclaration
+from .iprocessable import IProcessable
 from .util import bf_add
 
 

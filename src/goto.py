@@ -1,4 +1,4 @@
-from code_getters import IGetter
+from .code_getters import IGetter
 
 
 class Goto:

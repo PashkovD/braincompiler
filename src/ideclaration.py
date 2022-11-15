@@ -1,7 +1,7 @@
 from typing import Dict, List, Union, Tuple
 
-from code_var import CodeVar
-from goto import Goto
+from .code_var import CodeVar
+from .goto import Goto
 
 
 class IDeclaration:

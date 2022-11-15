@@ -1,5 +1,3 @@
-from collections import OrderedDict
-
 from ply import yacc
 
 from .code_ast import *

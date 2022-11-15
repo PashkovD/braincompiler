@@ -1,5 +1,3 @@
-import codecs
-
 from ply import lex
 
 

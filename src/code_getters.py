@@ -1,7 +1,7 @@
 from typing import Dict
 
-from code_types import StringCodeType
-from code_var import CodeVar
+from .code_types import StringCodeType
+from .code_var import CodeVar
 
 
 class IGetter:

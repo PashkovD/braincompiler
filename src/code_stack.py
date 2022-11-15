@@ -1,10 +1,10 @@
 from typing import Dict, List, Union, Tuple
 
-from code_getters import IndexGetter, VarGetter
-from code_types import StringCodeType
-from code_var import CodeVar
-from goto import Goto
-from ideclaration import IDeclaration
+from .code_getters import IndexGetter, VarGetter
+from .code_types import StringCodeType
+from .code_var import CodeVar
+from .goto import Goto
+from .ideclaration import IDeclaration
 
 
 class Stack(IDeclaration):

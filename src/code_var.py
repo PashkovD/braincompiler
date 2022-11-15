@@ -1,4 +1,4 @@
-from icode_type import ICodeType
+from .icode_type import ICodeType
 
 
 class CodeVar:

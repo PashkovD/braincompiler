@@ -1,5 +1,5 @@
-from code_var import CodeVar
-from icode_type import ICodeType
+from .code_var import CodeVar
+from .icode_type import ICodeType
 
 
 class IntCodeType(ICodeType):
