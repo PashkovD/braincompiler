@@ -2,97 +2,15 @@ from collections import OrderedDict
 from itertools import chain
 from typing import List, Union, Tuple, Dict
 
+from .base_ast import ASTWhile
 from .code_buffer import CodeBuffer
-from .code_getters import IGetter, VarGetter, IndexGetter
+from .code_getters import IGetter
 from .code_stack import Stack
-from .code_types import StringCodeType, IntCodeType
 from .code_var import CodeVar
 from .goto import Goto
 from .ideclaration import IDeclaration
 from .iprocessable import IProcessable
 from .util import bf_add
-
-
-class ASTIntDeclaration(IProcessable, IDeclaration):
-    def __init__(self, name: str, start: int):
-        if not isinstance(start, int):
-            raise Exception(f"Incorrect type of start value of {name}")
-        self.start: int
-        super(ASTIntDeclaration, self).__init__(name, start)
-
-    def process(self, declarations: Dict[str, CodeVar], stack: Stack, out: CodeBuffer) -> None:
-        out.write(Goto(VarGetter(self.name)))
-        out.write("[-]")
-        out.write(bf_add(self.start))
-
-    def key(self, pos: int) -> Tuple[str, CodeVar]:
-        return self.name, CodeVar(pos, IntCodeType())
-
-
-class ASTStringDeclaration(IProcessable, IDeclaration):
-    def __init__(self, name: str, start: bytes):
-        if not isinstance(start, bytes):
-            raise Exception(f"Incorrect type of start value of {name}")
-        self.start: bytes
-        super(ASTStringDeclaration, self).__init__(name, start)
-
-    def __str__(self):
-        return f"string {self.name}={repr(self.start)}"
-
-    def process(self, declarations: Dict[str, CodeVar], stack: Stack, out: CodeBuffer) -> None:
-        for i, f in enumerate(self.start):
-            out.write(Goto(IndexGetter(VarGetter(self.name), i)))
-            out.write("[-]")
-            out.write(bf_add(f))
-
-    def key(self, pos: int) -> Tuple[str, CodeVar]:
-        return self.name, CodeVar(pos, StringCodeType(len(self.start)))
-
-
-class ASTAssembler(IProcessable):
-    def __init__(self, code: str):
-        self.code: str = code
-
-    def __str__(self):
-        return f"asm({repr(self.code)})"
-
-    def process(self, declarations: Dict[str, CodeVar], stack: Stack, out: CodeBuffer) -> None:
-        out.write(self.code)
-
-
-class ASTGoto(IProcessable):
-    def __init__(self, name: IGetter):
-        self.name: IGetter = name
-
-    def __str__(self):
-        return f"goto {self.name}"
-
-    def process(self, declarations: Dict[str, CodeVar], stack: Stack, out: CodeBuffer) -> None:
-        out.write(Goto(self.name))
-
-
-class ASTOut(IProcessable):
-    def __init__(self, name: IGetter):
-        self.name: IGetter = name
-
-    def __str__(self):
-        return f"out {self.name}"
-
-    def process(self, declarations: Dict[str, CodeVar], stack: Stack, out: CodeBuffer) -> None:
-        out.write(Goto(self.name))
-        out.write(".")
-
-
-class ASTIn(IProcessable):
-    def __init__(self, name: IGetter):
-        self.name: IGetter = name
-
-    def __str__(self):
-        return f"out {self.name}"
-
-    def process(self, declarations: Dict[str, CodeVar], stack: Stack, out: CodeBuffer) -> None:
-        out.write(Goto(self.name))
-        out.write(",")
 
 
 class ASTIaddInt(IProcessable):
@@ -236,24 +154,6 @@ class ASTSetVar(IProcessable):
         out.write("]")
 
         stack.pop(copy_var)
-
-
-class ASTWhile(IProcessable):
-    def __init__(self, test_var: IGetter, code: List[IProcessable]):
-        self.test_var: IGetter = test_var
-        self.code: List[IProcessable] = code
-        assert all(isinstance(i, IProcessable) for i in self.code)
-
-    def __str__(self):
-        return f"while({self.test_var})"
-
-    def process(self, declarations: Dict[str, CodeVar], stack: Stack, out: CodeBuffer) -> None:
-        out.write(Goto(self.test_var))
-        out.write("[")
-        for i in self.code:
-            out.write(i)
-        out.write(Goto(self.test_var))
-        out.write("]")
 
 
 class ASTIf(IProcessable):
