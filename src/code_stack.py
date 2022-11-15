@@ -4,6 +4,7 @@ from .code_getters import IndexGetter, VarGetter
 from .code_types import StringCodeType
 from .code_var import CodeVar
 from .goto import Goto
+from .ibuffer import IBuffer
 from .ideclaration import IDeclaration
 
 
@@ -13,7 +14,7 @@ class Stack(IDeclaration):
         self.size: int = 0
         self.current: int = 0
 
-    def process(self, declarations: Dict[str, CodeVar], stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack, out: IBuffer) -> List[Union[Goto, str]]:
         data: List[Union[Goto, str]] = []
         for i in range(self.size):
             data += [Goto(IndexGetter(VarGetter(self.name), i)), "[-]"]

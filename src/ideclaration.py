@@ -1,7 +1,7 @@
-from typing import Dict, List, Union, Tuple
+from typing import Dict, Tuple
 
 from .code_var import CodeVar
-from .goto import Goto
+from .ibuffer import IBuffer
 
 
 class IDeclaration:
@@ -9,7 +9,7 @@ class IDeclaration:
         self.start = start
         self.name: str = name
 
-    def process(self, declarations: Dict[str, CodeVar], stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack, out: IBuffer) -> None:
         raise Exception
 
     def key(self, pos: int) -> Tuple[str, CodeVar]:
