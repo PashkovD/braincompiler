@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from typing import Dict
 
 from ply import yacc
 
@@ -75,7 +74,7 @@ class CodeParser:
         """code : asm '(' STRING '*' expr ')' ';'"""
         if not all(i in b"+-[]<>.,#" for i in p[3]):
             raise Exception(f"[:{p.slice[1].lineno}]Incorrect symbol in asm line")
-        p[0] = ASTAssembler(p[3].decode("utf-8")*p[5])
+        p[0] = ASTAssembler(p[3].decode("utf-8") * p[5])
 
     def p_code_goto(self, p):
         """code  : goto id ';'"""
@@ -242,8 +241,8 @@ class CodeParser:
         """id   : ID"""
         if p[1] not in self.vars_declarations.keys():
             raise Exception(f"[:{p.slice[1].lineno}]Unknown ID {p[1]}")
-        p[0] = p[1]
+        p[0] = VarGetter(name=p[1])
 
     def p_id_index(self, p):
         """id   : id '[' INTEGER ']'"""
-        p[0] = f"{p[1]}[{p[3]}]"
+        p[0] = IndexGetter(getter=p[1], index=p[3])

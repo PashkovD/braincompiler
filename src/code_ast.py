@@ -1,5 +1,9 @@
+from itertools import chain
 from typing import List, Union, Tuple, Dict
 
+from code_getters import IGetter, VarGetter, IndexGetter
+from code_types import StringCodeType, IntCodeType
+from code_var import CodeVar
 from .goto import Goto
 from .util import bf_add
 
@@ -9,10 +13,10 @@ class IDeclaration:
         self.start = start
         self.name: str = name
 
-    def process(self) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack) -> List[Union[Goto, str]]:
         raise Exception
 
-    def keys(self, pos: int) -> Tuple[Dict[str, int], int]:
+    def key(self, pos: int) -> Tuple[str, CodeVar]:
         raise Exception
 
 
@@ -22,54 +26,48 @@ class Stack(IDeclaration):
         self.size: int = 0
         self.current: int = 0
 
-    def process(self) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack) -> List[Union[Goto, str]]:
         data: List[Union[Goto, str]] = []
         for i in range(self.size):
-            data += [Goto(f"{self.name}[{i}]"), "[-]"]
+            data += [Goto(IndexGetter(VarGetter(self.name), i)), "[-]"]
         return data
 
-    def keys(self, pos: int) -> Tuple[Dict[str, int], int]:
-        data: Dict[str, int] = {}
-        for i in range(self.size):
-            data[f"{self.name}[{i}]"] = pos + i
-        return data, self.size
+    def key(self, pos: int) -> Tuple[str, CodeVar]:
+        return self.name, CodeVar(pos, StringCodeType(self.size))
 
-    def push(self) -> str:
+    def push(self) -> IndexGetter:
         self.current += 1
         self.size = max(self.size, self.current)
-        return f"{self.name}[{self.current - 1}]"
+        return IndexGetter(VarGetter(self.name), self.current - 1)
 
-    def pop(self, name: str):
+    def pop(self, name: IndexGetter):
         self.current -= 1
-        if name != f"{self.name}[{self.current}]":
+        if name != IndexGetter(VarGetter(self.name), self.current):
             raise Exception(f"Incorrect var in stack {repr(name)}")
         if self.current < 0:
             raise Exception(f"Incorrect var in stack {repr(name)}")
 
 
 class IProcessable:
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         raise Exception
 
 
-class ASTIntDeclaration(IDeclaration):
+class ASTIntDeclaration(IProcessable, IDeclaration):
     def __init__(self, name: str, start: int):
         if not isinstance(start, int):
             raise Exception(f"Incorrect type of start value of {name}")
         self.start: int
         super(ASTIntDeclaration, self).__init__(name, start)
 
-    def __str__(self):
-        return f"int {self.name}={self.start}"
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
+        return [Goto(VarGetter(self.name)), "[-]", bf_add(self.start)]
 
-    def process(self) -> List[Union[Goto, str]]:
-        return [Goto(self.name), "[-]", bf_add(self.start)]
-
-    def keys(self, pos: int) -> Tuple[Dict[str, int], int]:
-        return {self.name: pos}, 1
+    def key(self, pos: int) -> Tuple[str, CodeVar]:
+        return self.name, CodeVar(pos, IntCodeType())
 
 
-class ASTStringDeclaration(IDeclaration):
+class ASTStringDeclaration(IProcessable, IDeclaration):
     def __init__(self, name: str, start: bytes):
         if not isinstance(start, bytes):
             raise Exception(f"Incorrect type of start value of {name}")
@@ -79,19 +77,14 @@ class ASTStringDeclaration(IDeclaration):
     def __str__(self):
         return f"string {self.name}={repr(self.start)}"
 
-    def process(self) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data: List[Union[Goto, str]] = []
         for i, f in enumerate(self.start):
-            data += [Goto(f"{self.name}[{i}]"), "[-]", bf_add(f)]
+            data += [Goto(IndexGetter(VarGetter(self.name), i)), "[-]", bf_add(f)]
         return data
 
-    def keys(self, pos: int) -> Tuple[Dict[str, int], int]:
-        data: Dict[str, int] = {
-            self.name: pos
-        }
-        for i in range(len(self.start)):
-            data[f"{self.name}[{i}]"] = pos + i
-        return data, len(self.start)
+    def key(self, pos: int) -> Tuple[str, CodeVar]:
+        return self.name, CodeVar(pos, StringCodeType(len(self.start)))
 
 
 class ASTAssembler(IProcessable):
@@ -106,47 +99,47 @@ class ASTAssembler(IProcessable):
 
 
 class ASTGoto(IProcessable):
-    def __init__(self, name: str):
-        self.name: str = name
+    def __init__(self, name: IGetter):
+        self.name: IGetter = name
 
     def __str__(self):
         return f"goto {self.name}"
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         return [Goto(self.name)]
 
 
 class ASTOut(IProcessable):
-    def __init__(self, name: str):
-        self.name: str = name
+    def __init__(self, name: IGetter):
+        self.name: IGetter = name
 
     def __str__(self):
         return f"out {self.name}"
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         return [Goto(self.name), "."]
 
 
 class ASTIn(IProcessable):
-    def __init__(self, name: str):
-        self.name: str = name
+    def __init__(self, name: IGetter):
+        self.name: IGetter = name
 
     def __str__(self):
         return f"out {self.name}"
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         return [Goto(self.name), ","]
 
 
 class ASTIaddInt(IProcessable):
-    def __init__(self, names: List[str], num: int):
-        self.names: List[str] = names
+    def __init__(self, names: List[IGetter], num: int):
+        self.names: List[IGetter] = names
         self.num: int = num
 
     def __str__(self):
         return f"{str(self.names)[1:-1]} += {self.num}"
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data = []
         for i in self.names:
             data += [Goto(i), bf_add(self.num)]
@@ -154,14 +147,14 @@ class ASTIaddInt(IProcessable):
 
 
 class ASTIsubInt(IProcessable):
-    def __init__(self, names: List[str], num: int):
-        self.names: List[str] = names
+    def __init__(self, names: List[IGetter], num: int):
+        self.names: List[IGetter] = names
         self.num: int = num
 
     def __str__(self):
         return f"{str(self.names)[1:-1]} -= {self.num}"
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data = []
         for i in self.names:
             data += [Goto(i), bf_add(-self.num)]
@@ -169,14 +162,14 @@ class ASTIsubInt(IProcessable):
 
 
 class ASTSetInt(IProcessable):
-    def __init__(self, names: List[str], num: int):
-        self.names: List[str] = names
+    def __init__(self, names: List[IGetter], num: int):
+        self.names: List[IGetter] = names
         self.num: int = num
 
     def __str__(self):
         return f"{str(self.names)[1:-1]} = {self.num}"
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data = []
         for i in self.names:
             data += [Goto(i), "[-]", bf_add(self.num)]
@@ -184,14 +177,14 @@ class ASTSetInt(IProcessable):
 
 
 class ASTIaddVar(IProcessable):
-    def __init__(self, names: List[str], right: str):
-        self.names: List[str] = names
-        self.right: str = right
+    def __init__(self, names: List[IGetter], right: IGetter):
+        self.names: List[IGetter] = names
+        self.right: IGetter = right
 
     def __str__(self):
         return f"{str(self.names)[1:-1]} += {self.right}"
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data = []
         copy_var = stack.push()
         data += [Goto(copy_var), "[-]"]
@@ -201,20 +194,21 @@ class ASTIaddVar(IProcessable):
         data += [Goto(copy_var), "+"]
         data += [Goto(self.right), "]"]
 
-        data += [Goto(copy_var), "[-", Goto(self.right), "+", Goto(copy_var), "]"]
+        data += [Goto(copy_var),
+                 "[-", Goto(self.right), "+", Goto(copy_var), "]"]
         stack.pop(copy_var)
         return data
 
 
 class ASTIsubVar(IProcessable):
-    def __init__(self, names: List[str], right: str):
-        self.names: List[str] = names
-        self.right: str = right
+    def __init__(self, names: List[IGetter], right: IGetter):
+        self.names: List[IGetter] = names
+        self.right: IGetter = right
 
     def __str__(self):
         return f"{str(self.names)[1:-1]} -= {self.right}"
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data = []
         copy_var = stack.push()
         data += [Goto(copy_var), "[-]"]
@@ -224,20 +218,21 @@ class ASTIsubVar(IProcessable):
         data += [Goto(copy_var), "+"]
         data += [Goto(self.right), "]"]
 
-        data += [Goto(copy_var), "[-", Goto(self.right), "+", Goto(copy_var), "]"]
+        data += [Goto(copy_var), "[-", Goto(self.right), "+",
+                 Goto(copy_var), "]"]
         stack.pop(copy_var)
         return data
 
 
 class ASTSetVar(IProcessable):
-    def __init__(self, names: List[str], right: str):
-        self.names: List[str] = names
-        self.right: str = right
+    def __init__(self, names: List[IGetter], right: IGetter):
+        self.names: List[IGetter] = names
+        self.right: IGetter = right
 
     def __str__(self):
         return f"{str(self.names)[1:-1]} = {self.right}"
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data = []
         for i in self.names:
             data += [Goto(i), "[-]"]
@@ -250,21 +245,22 @@ class ASTSetVar(IProcessable):
         data += [Goto(copy_var), "+"]
         data += [Goto(self.right), "]"]
 
-        data += [Goto(copy_var), "[-", Goto(self.right), "+", Goto(copy_var), "]"]
+        data += [Goto(copy_var), "[-", Goto(self.right), "+",
+                 Goto(copy_var), "]"]
         stack.pop(copy_var)
         return data
 
 
 class ASTWhile(IProcessable):
-    def __init__(self, test_var: str, code: List[IProcessable]):
-        self.test_var: str = test_var
+    def __init__(self, test_var: IGetter, code: List[IProcessable]):
+        self.test_var: IGetter = test_var
         self.code: List[IProcessable] = code
         assert all(isinstance(i, IProcessable) for i in self.code)
 
     def __str__(self):
         return f"while({self.test_var})"
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data = []
         data += [Goto(self.test_var), "["]
         for i in self.code:
@@ -274,14 +270,14 @@ class ASTWhile(IProcessable):
 
 
 class ASTIf(IProcessable):
-    def __init__(self, test_var: str, code: List[IProcessable]):
-        self.test_var: str = test_var
+    def __init__(self, test_var: IGetter, code: List[IProcessable]):
+        self.test_var: IGetter = test_var
         self.code: List[IProcessable] = code
 
     def __str__(self):
         return f"if({self.test_var})"
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data = []
         copy_var = stack.push()
         data += ASTSetVar([copy_var], self.test_var).process(declarations, stack)
@@ -291,8 +287,8 @@ class ASTIf(IProcessable):
 
 
 class ASTIfElif(IProcessable):
-    def __init__(self, data: List[Tuple[str, List[IProcessable]]], code_else: List[IProcessable] = None):
-        self.data: List[Tuple[str, List[IProcessable]]] = data
+    def __init__(self, data: List[Tuple[IGetter, List[IProcessable]]], code_else: List[IProcessable] = None):
+        self.data: List[Tuple[IGetter, List[IProcessable]]] = data
         self.code_else: List[IProcessable] = code_else
 
     def __str__(self):
@@ -300,7 +296,7 @@ class ASTIfElif(IProcessable):
                "".join(f"elif({i[0]})" for i in self.data) + \
                f"else" if self.code_else is not None else ""
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data = []
         else_flag = stack.push()
         data += ASTSetInt([else_flag], 1).process(declarations, stack)
@@ -317,11 +313,11 @@ class ASTIfElif(IProcessable):
 
 
 class ASTCase(IProcessable):
-    def __init__(self, test_var: str, code: List[Tuple[int, List[IProcessable]]]):
-        self.test_var: str = test_var
+    def __init__(self, test_var: IGetter, code: List[Tuple[int, List[IProcessable]]]):
+        self.test_var: IGetter = test_var
         self.code: List[Tuple[int, List[IProcessable]]] = code
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data: List[Union[Goto, str]] = []
         if len(self.code) != 0:
             copy_var = stack.push()
@@ -337,11 +333,11 @@ class ASTCase(IProcessable):
 
 
 class ASTIdivVar(IProcessable):
-    def __init__(self, names: List[str], right: str):
-        self.names: List[str] = names
-        self.right: str = right
+    def __init__(self, names: List[IGetter], right: IGetter):
+        self.names: List[IGetter] = names
+        self.right: IGetter = right
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data: List[Union[Goto, str]] = []
         for left in self.names:
             work = stack.push()
@@ -373,11 +369,11 @@ class ASTIdivVar(IProcessable):
 
 
 class ASTImodVar(IProcessable):
-    def __init__(self, names: List[str], right: str):
-        self.names: List[str] = names
-        self.right: str = right
+    def __init__(self, names: List[IGetter], right: IGetter):
+        self.names: List[IGetter] = names
+        self.right: IGetter = right
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data: List[Union[Goto, str]] = []
         for left in self.names:
             work = stack.push()
@@ -405,11 +401,11 @@ class ASTImodVar(IProcessable):
 
 
 class ASTIdivInt(IProcessable):
-    def __init__(self, names: List[str], num: int):
-        self.names: List[str] = names
+    def __init__(self, names: List[IGetter], num: int):
+        self.names: List[IGetter] = names
         self.num: int = num
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data: List[Union[Goto, str]] = []
         for left in self.names:
             work = stack.push()
@@ -441,11 +437,11 @@ class ASTIdivInt(IProcessable):
 
 
 class ASTImodInt(IProcessable):
-    def __init__(self, names: List[str], num: int):
-        self.names: List[str] = names
+    def __init__(self, names: List[IGetter], num: int):
+        self.names: List[IGetter] = names
         self.num: int = num
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data: List[Union[Goto, str]] = []
         for left in self.names:
             work = stack.push()
@@ -473,11 +469,11 @@ class ASTImodInt(IProcessable):
 
 
 class ASTImulVar(IProcessable):
-    def __init__(self, names: List[str], right: str):
-        self.names: List[str] = names
-        self.right: str = right
+    def __init__(self, names: List[IGetter], right: IGetter):
+        self.names: List[IGetter] = names
+        self.right: IGetter = right
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data: List[Union[Goto, str]] = []
         for left in self.names:
             copy_var = stack.push()
@@ -495,11 +491,11 @@ class ASTImulVar(IProcessable):
 
 
 class ASTImulInt(IProcessable):
-    def __init__(self, names: List[str], num: int):
-        self.names: List[str] = names
+    def __init__(self, names: List[IGetter], num: int):
+        self.names: List[IGetter] = names
         self.num: int = num
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         if self.num == 0:
             return ASTSetInt(self.names, self.num).process(declarations, stack)
         data: List[Union[Goto, str]] = []
@@ -519,33 +515,33 @@ class ASTImulInt(IProcessable):
 
 
 class ASTIlshiftInt(IProcessable):
-    def __init__(self, names: List[str], num: int):
-        self.names: List[str] = names
+    def __init__(self, names: List[IGetter], num: int):
+        self.names: List[IGetter] = names
         self.num: int = num
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         if self.num == 0:
             return ASTSetInt(self.names, 0).process(declarations, stack)
         return ASTImulInt(self.names, 2 ** self.num).process(declarations, stack)
 
 
 class ASTIrshiftInt(IProcessable):
-    def __init__(self, names: List[str], num: int):
-        self.names: List[str] = names
+    def __init__(self, names: List[IGetter], num: int):
+        self.names: List[IGetter] = names
         self.num: int = num
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         if self.num == 0:
             return []
         return ASTIdivInt(self.names, 2 ** self.num).process(declarations, stack)
 
 
 class ASTIlshiftVar(IProcessable):
-    def __init__(self, names: List[str], right: str):
-        self.names: List[str] = names
-        self.right: str = right
+    def __init__(self, names: List[IGetter], right: IGetter):
+        self.names: List[IGetter] = names
+        self.right: IGetter = right
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data: List[Union[Goto, str]] = []
         copy_var = stack.push()
         data += ASTSetVar([copy_var], self.right).process(declarations, stack)
@@ -558,11 +554,11 @@ class ASTIlshiftVar(IProcessable):
 
 
 class ASTIrshiftVar(IProcessable):
-    def __init__(self, names: List[str], right: str):
-        self.names: List[str] = names
-        self.right: str = right
+    def __init__(self, names: List[IGetter], right: IGetter):
+        self.names: List[IGetter] = names
+        self.right: IGetter = right
 
-    def process(self, declarations: Dict[str, IDeclaration], stack: Stack) -> List[Union[Goto, str]]:
+    def process(self, declarations: Dict[str, CodeVar], stack: Stack) -> List[Union[Goto, str]]:
         data: List[Union[Goto, str]] = []
         copy_var = stack.push()
         data += ASTSetVar([copy_var], self.right).process(declarations, stack)
@@ -579,18 +575,25 @@ class ASTFile:
         self.declarations: Dict[str, IDeclaration] = {}
         self.code: List[IProcessable] = []
 
-    def process(self) -> Tuple[List[Union[Goto, str]], Dict[str, IDeclaration]]:
+    def process(self) -> Tuple[List[Union[Goto, str]], Dict[str, CodeVar]]:
         code: List[Union[Goto, str]] = []
-        declarations: List[Union[Goto, str]] = []
+        declarations_code: List[Union[Goto, str]] = []
+        decls: Dict[str, CodeVar] = {}
         stack: Stack = Stack("__stack")
 
         for i in self.code:
-            code += i.process(self.declarations, stack)
+            code += i.process(decls, stack)
 
-        declarations += stack.process()
+        for i in chain([stack], self.declarations.values()):
+            declarations_code += i.process(decls, stack)
 
-        for i in self.declarations.values():
-            declarations += i.process()
+        pos = 0
+        for i in chain([stack], self.declarations.values()):
+            name, var = i.key(pos)
+            decls[name] = var
+            pos += var.get_size()
+
         if stack.current != 0:
             raise Exception("Stack not empty at end")
-        return declarations + code, {stack.name: stack} | self.declarations
+
+        return declarations_code + code, decls

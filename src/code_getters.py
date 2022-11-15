@@ -8,6 +8,9 @@ class IGetter:
     def get_var(self, declarations: Dict[str, CodeVar]) -> CodeVar:
         raise Exception
 
+    def __eq__(self, other: "IGetter") -> bool:
+        return self is other
+
 
 class VarGetter(IGetter):
     def __init__(self, name: str):
@@ -15,6 +18,11 @@ class VarGetter(IGetter):
 
     def get_var(self, declarations: Dict[str, CodeVar]) -> CodeVar:
         return declarations[self.name]
+
+    def __eq__(self, other: IGetter) -> bool:
+        if not isinstance(other, type(self)):
+            return False
+        return self.name == other.name
 
 
 class IndexGetter(IGetter):
@@ -26,3 +34,8 @@ class IndexGetter(IGetter):
         var = self.getter.get_var(declarations)
         assert isinstance(var.type, StringCodeType), "Getting element from not array"
         return var.type.get_item(var, self.index)
+
+    def __eq__(self, other: IGetter) -> bool:
+        if not isinstance(other, type(self)):
+            return False
+        return self.getter == other.getter and self.index == other.index

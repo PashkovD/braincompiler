@@ -1,5 +1,3 @@
-from typing import Dict
-
 from .code_ast import ASTFile
 from .goto import Goto
 from .util import bf_move
@@ -10,23 +8,19 @@ class CodeLinker:
         self.code: ASTFile = code
 
     def process(self) -> str:
-        pos = 0
         code, declarations = self.code.process()
-        decls: Dict[str, int] = {}
-        for i in declarations.values():
-            data2, size = i.keys(pos)
-            pos += size
-            decls.update(data2)
         pos = 0
         data = ""
         for i in code:
             if isinstance(i, str):
                 data += i
                 continue
-            if not isinstance(i, Goto):
-                raise Exception
+            if isinstance(i, Goto):
+                var = i.var.get_var(declarations).pos
+                data += bf_move(var - pos)
+                pos = var
+                continue
 
-            data += bf_move(decls[i.name]-pos)
-            pos = decls[i.name]
+            raise Exception
 
         return data

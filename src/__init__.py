@@ -1,9 +1,6 @@
-from .code_ast import *
-from .goto import *
 from .lexer import *
 from .linker import *
 from .parser import *
-from .util import *
 
 
 def compile_code(data: str) -> str:

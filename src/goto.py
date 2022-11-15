@@ -1,6 +1,6 @@
-class Goto:
-    def __init__(self, name: str):
-        self.name: str = name
+from code_getters import IGetter
 
-    def __str__(self):
-        return f"goto {self.name}"
+
+class Goto:
+    def __init__(self, var: IGetter):
+        self.var: IGetter = var
