@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from itertools import chain
 from typing import List, Union, Tuple, Dict
 
@@ -572,7 +573,7 @@ class ASTIrshiftVar(IProcessable):
 
 class ASTFile:
     def __init__(self):
-        self.declarations: Dict[str, IDeclaration] = {}
+        self.declarations: Dict[str, IDeclaration] = OrderedDict()
         self.code: List[IProcessable] = []
 
     def process(self) -> Tuple[List[Union[Goto, str]], Dict[str, CodeVar]]:
