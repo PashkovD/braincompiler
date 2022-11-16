@@ -2,8 +2,8 @@ import random
 from operator import eq
 from unittest import TestCase
 
-import tests.intepreter
 from src import compile_code
+from tests.interpreter import Interpreter
 
 
 class Tests(TestCase):
@@ -17,7 +17,7 @@ class Tests(TestCase):
             out b;
             out a;
         """
-        out = tests.intepreter.process(compile_code(code), inp)
+        out = Interpreter()(compile_code(code), inp)
         self.assertTrue(all(map(eq, out, reversed(inp))))
 
     def test_add_int(self):
@@ -34,7 +34,7 @@ class Tests(TestCase):
             out a;
             out b;
                 """
-        out = tests.intepreter.process(compile_code(code), inp)
+        out = Interpreter()(compile_code(code), inp)
         self.assertEqual((left1 + right1) % 256, out[0])
         self.assertEqual((left2 + right2) % 256, out[1])
 
@@ -52,7 +52,7 @@ class Tests(TestCase):
             out a;
             out b;
                 """
-        out = tests.intepreter.process(compile_code(code), inp)
+        out = Interpreter()(compile_code(code), inp)
         self.assertEqual((left1 - right1 + 256) % 256, out[0])
         self.assertEqual((left2 - right2 + 256) % 256, out[1])
 
@@ -70,7 +70,7 @@ class Tests(TestCase):
             out a;
             out b;
                 """
-        out = tests.intepreter.process(compile_code(code), inp)
+        out = Interpreter()(compile_code(code), inp)
         self.assertEqual(right1, out[0])
         self.assertEqual(right2, out[1])
 
@@ -90,7 +90,7 @@ class Tests(TestCase):
                     out a;
                     out b;
                         """
-        out = tests.intepreter.process(compile_code(code), inp)
+        out = Interpreter()(compile_code(code), inp)
         self.assertEqual((left1 + right1) % 256, out[0])
         self.assertEqual((left2 + right2) % 256, out[1])
 
@@ -110,7 +110,7 @@ class Tests(TestCase):
                     out a;
                     out b;
                         """
-        out = tests.intepreter.process(compile_code(code), inp)
+        out = Interpreter()(compile_code(code), inp)
         self.assertEqual((left1 - right1 + 256) % 256, out[0])
         self.assertEqual((left2 - right2 + 256) % 256, out[1])
 
@@ -130,7 +130,7 @@ class Tests(TestCase):
                     out a;
                     out b;
                         """
-        out = tests.intepreter.process(compile_code(code), inp)
+        out = Interpreter()(compile_code(code), inp)
         self.assertEqual(right1, out[0])
         self.assertEqual(right2, out[1])
 
@@ -144,5 +144,18 @@ class Tests(TestCase):
                 a -= "\n";
             }
             """
-        out = tests.intepreter.process(compile_code(code), inp)
+        out = Interpreter()(compile_code(code), inp)
         self.assertEqual(inp, out)
+
+    def test_while_true(self):
+        inp = b""
+        code = r"""
+            int a = "1";
+            while(a){
+                out a;
+            }
+            """
+        inter = Interpreter()
+        with self.assertRaises(TimeoutError):
+            inter(compile_code(code), inp)
+        self.assertTrue(len(inter.out) > 100)
