@@ -74,6 +74,114 @@ class Tests(TestCase):
         self.assertEqual(right1, out[0])
         self.assertEqual(right2, out[1])
 
+    def test_mul_int(self):
+        inp = b""
+        left1 = random.randint(0, 255)
+        right1 = random.randint(1, 255)
+        left2 = random.randint(0, 255)
+        right2 = random.randint(1, 255)
+        code = f"""
+            int a = {left1};
+            int b = {left2};
+            a *= {right1};
+            b *= {right2};
+            out a;
+            out b;
+                """
+        out = Interpreter(1)(compile_code(code), inp)
+        self.assertEqual((left1 * right1) % 256, out[0])
+        self.assertEqual((left2 * right2) % 256, out[1])
+
+    def test_mul_zero_int(self):
+        inp = b""
+        left1 = random.randint(0, 255)
+        right1 = 0
+        left2 = random.randint(0, 255)
+        right2 = 0
+        code = f"""
+            int a = {left1};
+            int b = {left2};
+            a *= {right1};
+            b *= {right2};
+            out a;
+            out b;
+                """
+        out = Interpreter(1)(compile_code(code), inp)
+        self.assertEqual((left1 * right1) % 256, out[0])
+        self.assertEqual((left2 * right2) % 256, out[1])
+
+    def test_div_int(self):
+        inp = b""
+        left1 = random.randint(0, 255)
+        right1 = random.randint(1, 255)
+        left2 = random.randint(0, 255)
+        right2 = random.randint(1, 255)
+        code = f"""
+            int a = {left1};
+            int b = {left2};
+            a /= {right1};
+            b /= {right2};
+            out a;
+            out b;
+                """
+        out = Interpreter(1)(compile_code(code), inp)
+        self.assertEqual((left1 // right1) % 256, out[0])
+        self.assertEqual((left2 // right2) % 256, out[1])
+
+    def test_div_zero_int(self):
+        inp = b""
+        left1 = random.randint(0, 255)
+        right1 = 0
+        left2 = random.randint(0, 255)
+        right2 = 0
+        code = f"""
+            int a = {left1};
+            int b = {left2};
+            a *= {right1};
+            b *= {right2};
+            out a;
+            out b;
+                """
+        out = Interpreter(1)(compile_code(code), inp)
+        self.assertEqual(0, out[0])
+        self.assertEqual(0, out[1])
+
+    def test_mod_int(self):
+        inp = b""
+        left1 = random.randint(0, 255)
+        right1 = random.randint(1, 255)
+        left2 = random.randint(0, 255)
+        right2 = random.randint(1, 255)
+        code = f"""
+            int a = {left1};
+            int b = {left2};
+            a %= {right1};
+            b %= {right2};
+            out a;
+            out b;
+                """
+        out = Interpreter(1)(compile_code(code), inp)
+        self.assertEqual(left1 % right1, out[0])
+        self.assertEqual(left2 % right2, out[1])
+
+    def test_mod_zero_int(self):
+        inp = b""
+        left1 = random.randint(0, 255)
+        right1 = 0
+        left2 = random.randint(0, 255)
+        right2 = 0
+        code = f"""
+            int a = {left1};
+            int b = {left2};
+            a %= {right1};
+            b %= {right2};
+            out a;
+            out b;
+                """
+        out = Interpreter(1)(compile_code(code), inp)
+        self.assertEqual(0, out[0])
+        self.assertEqual(0, out[1])
+
     def test_add_var(self):
         inp = b""
         left1 = random.randint(0, 255)
