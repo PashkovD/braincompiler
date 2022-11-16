@@ -137,14 +137,14 @@ class Tests(TestCase):
         code = f"""
             int a = {left1};
             int b = {left2};
-            a *= {right1};
-            b *= {right2};
+            a /= {right1};
+            b /= {right2};
             out a;
             out b;
                 """
         out = Interpreter(1)(compile_code(code), inp)
-        self.assertEqual(0, out[0])
-        self.assertEqual(0, out[1])
+        self.assertEqual(255, out[0])
+        self.assertEqual(255, out[1])
 
     def test_mod_int(self):
         inp = b""
@@ -179,8 +179,8 @@ class Tests(TestCase):
             out b;
                 """
         out = Interpreter(1)(compile_code(code), inp)
-        self.assertEqual(0, out[0])
-        self.assertEqual(0, out[1])
+        self.assertEqual(255, out[0])
+        self.assertEqual(255, out[1])
 
     def test_add_var(self):
         inp = b""

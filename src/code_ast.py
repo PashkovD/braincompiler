@@ -279,6 +279,9 @@ class ASTIdivInt(IProcessable):
 
     def process(self, declarations: Dict[str, CodeVar], stack: Stack, out: CodeBuffer) -> None:
         for left in self.names:
+            if self.num == 0:
+                out.write(ASTSetInt([left], -1))
+                continue
             work = stack.push()
             out.write(ASTSetInt([work], 1))
             counter = stack.push()
@@ -313,6 +316,10 @@ class ASTImodInt(IProcessable):
 
     def process(self, declarations: Dict[str, CodeVar], stack: Stack, out: CodeBuffer) -> None:
         for left in self.names:
+            if self.num == 0:
+                out.write(ASTSetInt([left], -1))
+                continue
+
             work = stack.push()
             out.write(ASTSetInt([work], 1))
             left_var = stack.push()
