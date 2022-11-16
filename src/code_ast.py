@@ -72,9 +72,9 @@ class ASTIaddVar(IProcessable):
                            [
                                ASTIsubInt([self.right], 1),
                                ASTIaddInt([copy_var], 1)
-                           ] + [ASTIsubInt([i], 1) for i in self.names]))
+                           ] + [ASTIaddInt([i], 1) for i in self.names]))
 
-        out.write(ASTWhile(self.right,
+        out.write(ASTWhile(copy_var,
                            [
                                ASTIsubInt([copy_var], 1),
                                ASTIaddInt([self.right], 1)
