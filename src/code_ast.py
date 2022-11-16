@@ -68,17 +68,19 @@ class ASTIaddVar(IProcessable):
     def process(self, declarations: Dict[str, CodeVar], stack: Stack, out: CodeBuffer) -> None:
         copy_var = stack.push()
         out.write(ASTSetInt([copy_var], 0))
-        out.write(ASTWhile(self.right,
-                           [
-                               ASTIsubInt([self.right], 1),
-                               ASTIaddInt([copy_var], 1)
-                           ] + [ASTIaddInt([i], 1) for i in self.names]))
 
-        out.write(ASTWhile(copy_var,
-                           [
-                               ASTIsubInt([copy_var], 1),
-                               ASTIaddInt([self.right], 1)
-                           ]))
+        out.write(
+            ASTWhile(self.right, [
+                ASTIsubInt([self.right], 1),
+                ASTIaddInt(self.names, 1),
+                ASTIaddInt([copy_var], 1)
+            ]))
+
+        out.write(
+            ASTWhile(copy_var, [
+                ASTIsubInt([copy_var], 1),
+                ASTIaddInt([self.right], 1)
+            ]))
 
         stack.pop(copy_var)
 
@@ -94,22 +96,19 @@ class ASTIsubVar(IProcessable):
     def process(self, declarations: Dict[str, CodeVar], stack: Stack, out: CodeBuffer) -> None:
         copy_var = stack.push()
         out.write(ASTSetInt([copy_var], 0))
-        out.write(Goto(self.right))
-        out.write("[-")
-        for i in self.names:
-            out.write(Goto(i))
-            out.write("-")
-        out.write(Goto(copy_var))
-        out.write("+")
-        out.write(Goto(self.right))
-        out.write("]")
 
-        out.write(Goto(copy_var))
-        out.write("[-")
-        out.write(Goto(self.right))
-        out.write("+")
-        out.write(Goto(copy_var))
-        out.write("]")
+        out.write(
+            ASTWhile(self.right, [
+                ASTIsubInt([self.right], 1),
+                ASTIsubInt(self.names, 1),
+                ASTIaddInt([copy_var], 1)
+            ]))
+
+        out.write(
+            ASTWhile(copy_var, [
+                ASTIsubInt([copy_var], 1),
+                ASTIaddInt([self.right], 1)
+            ]))
 
         stack.pop(copy_var)
 
