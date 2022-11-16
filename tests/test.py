@@ -133,3 +133,16 @@ class Tests(TestCase):
         out = tests.intepreter.process(compile_code(code), inp)
         self.assertEqual(right1, out[0])
         self.assertEqual(right2, out[1])
+
+    def test_cat_program(self):
+        inp = random.randbytes(10) + b"\n"
+        code = r"""
+            int a = 1;
+            while(a){
+                in a;
+                out a;
+                a -= "\n";
+            }
+            """
+        out = tests.intepreter.process(compile_code(code), inp)
+        self.assertEqual(inp, out)
