@@ -53,7 +53,8 @@ class ASTSetInt(IProcessable):
         for i in self.names:
             out.write(Goto(i))
             out.write("[-]")
-            out.write(bf_add(self.num))
+
+        out.write(ASTIaddInt(self.names, self.num))
 
 
 class ASTIaddVar(IProcessable):
@@ -66,8 +67,7 @@ class ASTIaddVar(IProcessable):
 
     def process(self, declarations: Dict[str, CodeVar], stack: Stack, out: CodeBuffer) -> None:
         copy_var = stack.push()
-        out.write(Goto(copy_var))
-        out.write("[-]")
+        out.write(ASTSetInt([copy_var], 0))
         out.write(ASTWhile(self.right,
                            [
                                ASTIsubInt([self.right], 1),
@@ -93,8 +93,7 @@ class ASTIsubVar(IProcessable):
 
     def process(self, declarations: Dict[str, CodeVar], stack: Stack, out: CodeBuffer) -> None:
         copy_var = stack.push()
-        out.write(Goto(copy_var))
-        out.write("[-]")
+        out.write(ASTSetInt([copy_var], 0))
         out.write(Goto(self.right))
         out.write("[-")
         for i in self.names:
@@ -124,13 +123,10 @@ class ASTSetVar(IProcessable):
         return f"{str(self.names)[1:-1]} = {self.right}"
 
     def process(self, declarations: Dict[str, CodeVar], stack: Stack, out: CodeBuffer) -> None:
-        for i in self.names:
-            out.write(Goto(i))
-            out.write("[-]")
+        out.write(ASTSetInt(self.names, 0))
 
         copy_var = stack.push()
-        out.write(Goto(copy_var))
-        out.write("[-]")
+        out.write(ASTSetInt([copy_var], 0))
         out.write(Goto(self.right))
         out.write("[-")
         for i in self.names:

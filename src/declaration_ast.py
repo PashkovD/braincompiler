@@ -1,14 +1,13 @@
 from typing import Dict, Tuple
 
+from .code_ast import ASTSetInt
 from .code_buffer import CodeBuffer
 from .code_getters import VarGetter, IndexGetter
 from .code_stack import Stack
 from .code_types import IntCodeType, StringCodeType
 from .code_var import CodeVar
-from .goto import Goto
 from .ideclaration import IDeclaration
 from .iprocessable import IProcessable
-from .util import bf_add
 
 
 class ASTIntDeclaration(IProcessable, IDeclaration):
@@ -19,9 +18,7 @@ class ASTIntDeclaration(IProcessable, IDeclaration):
         super(ASTIntDeclaration, self).__init__(name, start)
 
     def process(self, declarations: Dict[str, CodeVar], stack: Stack, out: CodeBuffer) -> None:
-        out.write(Goto(VarGetter(self.name)))
-        out.write("[-]")
-        out.write(bf_add(self.start))
+        out.write(ASTSetInt([VarGetter(self.name)], self.start))
 
     def key(self, pos: int) -> Tuple[str, CodeVar]:
         return self.name, CodeVar(pos, IntCodeType())
@@ -39,9 +36,7 @@ class ASTStringDeclaration(IProcessable, IDeclaration):
 
     def process(self, declarations: Dict[str, CodeVar], stack: Stack, out: CodeBuffer) -> None:
         for i, f in enumerate(self.start):
-            out.write(Goto(IndexGetter(VarGetter(self.name), i)))
-            out.write("[-]")
-            out.write(bf_add(f))
+            out.write(ASTSetInt([IndexGetter(VarGetter(self.name), i)], f))
 
     def key(self, pos: int) -> Tuple[str, CodeVar]:
         return self.name, CodeVar(pos, StringCodeType(len(self.start)))
