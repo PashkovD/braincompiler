@@ -1,16 +1,15 @@
 from typing import Dict, Tuple
 
-from .code_ast import ASTSetInt
+from .ast_set_int import ASTSetInt
 from .code_buffer import CodeBuffer
 from .code_getters import VarGetter, IndexGetter
 from .code_stack import Stack
 from .code_types import IntCodeType, StringCodeType
 from .code_var import CodeVar
 from .ideclaration import IDeclaration
-from .iprocessable import IProcessable
 
 
-class ASTIntDeclaration(IProcessable, IDeclaration):
+class ASTIntDeclaration(IDeclaration):
     def __init__(self, name: str, start: int):
         if not isinstance(start, int):
             raise Exception(f"Incorrect type of start value of {name}")
@@ -24,7 +23,7 @@ class ASTIntDeclaration(IProcessable, IDeclaration):
         return self.name, CodeVar(pos, IntCodeType())
 
 
-class ASTStringDeclaration(IProcessable, IDeclaration):
+class ASTStringDeclaration(IDeclaration):
     def __init__(self, name: str, start: bytes):
         if not isinstance(start, bytes):
             raise Exception(f"Incorrect type of start value of {name}")

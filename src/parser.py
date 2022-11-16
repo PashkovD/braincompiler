@@ -1,6 +1,25 @@
 from ply import yacc
 
-from .base_ast import ASTAssembler, ASTGoto, ASTIn, ASTOut
+from .ast_case import ASTCase
+from .ast_iadd_int import ASTIaddInt
+from .ast_iadd_var import ASTIaddVar
+from .ast_idiv_int import ASTIdivInt
+from .ast_idiv_var import ASTIdivVar
+from .ast_if import ASTIf
+from .ast_if_elif import ASTIfElif
+from .ast_ilshift_int import ASTIlshiftInt
+from .ast_ilshift_var import ASTIlshiftVar
+from .ast_imod_int import ASTImodInt
+from .ast_imod_var import ASTImodVar
+from .ast_imul_int import ASTImulInt
+from .ast_imul_var import ASTImulVar
+from .ast_irshift_int import ASTIrshiftInt
+from .ast_irshift_var import ASTIrshiftVar
+from .ast_isub_int import ASTIsubInt
+from .ast_isub_var import ASTIsubVar
+from .ast_set_int import ASTSetInt
+from .ast_set_var import ASTSetVar
+from .base_ast import ASTAssembler, ASTGoto, ASTIn, ASTOut, ASTWhile
 from .code_ast import *
 from .code_getters import VarGetter, IndexGetter
 from .declaration_ast import ASTIntDeclaration, ASTStringDeclaration
