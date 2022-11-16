@@ -53,8 +53,7 @@ class ASTSetInt(IProcessable):
         for i in self.names:
             out.write(Goto(i))
             out.write("[-]")
-
-        out.write(ASTIaddInt(self.names, self.num))
+            out.write(ASTIaddInt([i], self.num))
 
 
 class ASTIaddVar(IProcessable):
