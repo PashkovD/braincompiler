@@ -1,6 +1,9 @@
 from ply import yacc
 
+from .base_ast import ASTAssembler, ASTGoto, ASTIn, ASTOut
 from .code_ast import *
+from .code_getters import VarGetter, IndexGetter
+from .declaration_ast import ASTIntDeclaration, ASTStringDeclaration
 
 
 class CodeParser:
