@@ -21,7 +21,7 @@ class Stack(IDeclaration):
         return data
 
     def key(self, pos: int) -> Tuple[str, CodeVar]:
-        return self.name, CodeVar(pos, StringCodeType(self.size))
+        return self.name, CodeVar(pos, StringCodeType(2 ** 64))
 
     def push(self) -> IndexGetter:
         self.current += 1

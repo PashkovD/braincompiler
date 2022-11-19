@@ -22,17 +22,17 @@ class ASTFile:
         code: CodeBuffer = CodeBuffer(decls, stack)
         declarations_code: CodeBuffer = CodeBuffer(decls, stack)
 
+        pos = 0
+        for i in chain(self.declarations.values(), [stack]):
+            name, var = i.key(pos)
+            decls[name] = var
+            pos += var.get_size()
+
         for i in self.code:
             code.write(i)
 
         for i in chain([stack], self.declarations.values()):
             i.process(decls, stack, declarations_code)
-
-        pos = 0
-        for i in chain([stack], self.declarations.values()):
-            name, var = i.key(pos)
-            decls[name] = var
-            pos += var.get_size()
 
         if stack.current != 0:
             raise Exception("Stack not empty at end")
