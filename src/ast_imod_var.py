@@ -1,5 +1,6 @@
 from typing import List, Dict
 
+from .ast_if import ASTIf
 from .ast_if_elif import ASTIfElif
 from .ast_isub_int import ASTIsubInt
 from .ast_isub_var import ASTIsubVar
@@ -26,17 +27,22 @@ class ASTImodVar(IProcessable):
             out.write(ASTSetVar([left_var], left))
             right_var = stack.push()
 
-            out.write(ASTWhile(work, [
-                ASTSetVar([right_var], self.right),
-                ASTWhile(right_var, [
-                    ASTIfElif([(left_var, [])], code_else=[
-                        ASTSetInt([work], 0),
-                        ASTSetVar([left], self.right),
-                        ASTIsubVar([left], right_var),
-                        ASTSetInt([left_var, right_var], 1),
+            out.write(ASTIf(self.right, [
+                ASTWhile(work, [
+                    ASTSetVar([right_var], self.right),
+                    ASTWhile(right_var, [
+                        ASTIfElif([(left_var, [])], code_else=[
+                            ASTSetInt([work], 0),
+                            ASTSetVar([left], self.right),
+                            ASTIsubVar([left], right_var),
+                            ASTSetInt([left_var, right_var], 1),
+                        ]),
+                        ASTIsubInt([left_var, right_var], 1),
                     ]),
-                    ASTIsubInt([left_var, right_var], 1),
-                ]),
+                ])
+            ]))
+            out.write(ASTIfElif([(self.right, [])], code_else=[
+                ASTSetInt([left], 255),
             ]))
             stack.pop(right_var)
             stack.pop(left_var)
