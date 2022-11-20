@@ -17,6 +17,8 @@ from .ast_irshift_int import ASTIrshiftInt
 from .ast_irshift_var import ASTIrshiftVar
 from .ast_isub_int import ASTIsubInt
 from .ast_isub_var import ASTIsubVar
+from .ast_list_get_var import ASTListGetVar
+from .ast_list_set_var import ASTListSetVar
 from .ast_set_int import ASTSetInt
 from .ast_set_var import ASTSetVar
 from .base_ast import ASTAssembler, ASTGoto, ASTIn, ASTOut, ASTWhile
@@ -183,6 +185,14 @@ class CodeParser:
                 p[0] = ASTIrshiftVar(p[1], p[3])
             case _ as e:
                 raise Exception(e)
+
+    def p_code_set_list_var(self, p):
+        """code     : id '[' id ']' '=' id ';' """
+        p[0] = ASTListSetVar(p[1], p[3], p[6])
+
+    def p_code_get_list_var(self, p):
+        """code     : id_list '=' id '[' id ']' ';' """
+        p[0] = ASTListGetVar(p[1], p[3], p[5])
 
     def p_code_while(self, p):
         """code : while '(' id ')' block_code"""

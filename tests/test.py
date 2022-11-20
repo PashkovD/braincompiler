@@ -373,6 +373,40 @@ class Tests(TestCase):
         self.assertEqual(255, out[0])
         self.assertEqual(255, out[1])
 
+    def test_list_set_var(self):
+        inp = random.randbytes(256)
+        inp2 = random.randbytes(32)
+        code = f"""
+            string data = "{" " * 256}";
+            int counter = 255;
+            int var;""" + """
+            while (counter){
+                in var;
+                data[counter] = var;
+                counter -= 1;
+            }
+            in var;
+            data[counter] = var;
+            var = " ";
+            
+            counter = 32;
+            while (counter){
+                counter -= 1;
+                in var;
+                var = data[var];
+                out var;
+            }
+            
+        """
+        print(code)
+        print(repr(inp))
+        print(repr(inp2))
+        out = Interpreter(100)(compile_code(code), bytes(reversed(inp)) + inp2)
+        print(out)
+        self.assertEqual(len(inp2), len(out))
+        for i, f in zip(inp2, out):
+            self.assertEqual(inp[i], f)
+
     def test_cat_program(self):
         inp = random.randbytes(10)
         while inp.count(b"\n") != 0:
