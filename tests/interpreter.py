@@ -52,6 +52,14 @@ class CurAdd(IInterInst):
         return abs(self.var)
 
 
+class CurSet(CurAdd):
+    def __repr__(self):
+        return f"CurSet({self.var})"
+
+    def process(self, state: InterpreterState):
+        state.cursor = self.var
+
+
 class Interpreter(Thread):
     def __init__(self, timeout: int = 0.1):
         super().__init__()
@@ -113,9 +121,6 @@ class Interpreter(Thread):
                         pos = end_start[pos] + 1
                     else:
                         pos += 1
-                case "0":
-                    state.cursor = 0
-                    pos += 1
                 case _:
                     pos += 1
         pass
@@ -127,10 +132,10 @@ class Interpreter(Thread):
             match i:
                 case "." | "," | "[" | "]":
                     last = i
-                    self.proc_code.append(i)
+                    self.proc_code.append(last)
                 case "0":
-                    last = i
-                    self.proc_code.append(i)
+                    last = CurSet(0)
+                    self.proc_code.append(last)
                 case ">" | "<":
                     if not isinstance(last, CurMove):
                         last = CurMove(0)
