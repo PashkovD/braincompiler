@@ -401,7 +401,7 @@ class Tests(TestCase):
         print(code)
         print(repr(inp))
         print(repr(inp2))
-        out = Interpreter(100)(compile_code(code), bytes(reversed(inp)) + inp2)
+        out = Interpreter(240)(compile_code(code), bytes(reversed(inp)) + inp2)
         print(out)
         self.assertEqual(len(inp2), len(out))
         for i, f in zip(inp2, out):
