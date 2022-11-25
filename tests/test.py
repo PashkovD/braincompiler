@@ -2,7 +2,8 @@ import random
 from operator import eq
 from unittest import TestCase
 
-from src import compile_code
+from braincompiler import compile_code
+
 from tests.interpreter import Interpreter
 
 

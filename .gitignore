@@ -1,4 +1,7 @@
 /.idea/
 
-/src/parser.out
-/src/parsetab.py
+/src/braincompiler/parser.out
+/src/braincompiler/parsetab.py
+/src/braincompiler.egg-info/
+
+/build/
