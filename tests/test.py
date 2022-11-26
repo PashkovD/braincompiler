@@ -1,6 +1,9 @@
+import os
 import random
 from operator import eq
 from unittest import TestCase
+
+print(os.system("python -m pip install .."))
 
 from braincompiler import compile_code
 
@@ -8,6 +11,7 @@ from tests.interpreter import Interpreter
 
 
 class Tests(TestCase):
+
     def test_2_in_reverse_out(self):
         inp = random.randbytes(2)
         code = """
