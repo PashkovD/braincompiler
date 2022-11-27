@@ -1,6 +1,8 @@
 from threading import Thread
 from typing import Dict, List, Iterable, Iterator, Union
 
+class InterStop(Exception):
+    ...
 
 class InterpreterState:
     def __init__(self, inp: Iterator[int], out: bytearray, mem_len: int = 1000):
@@ -8,6 +10,7 @@ class InterpreterState:
         self.out: bytearray = out
         self.mem: bytearray = bytearray(mem_len)
         self.cursor_pos: int = 0
+        self.stoped = False
 
     @property
     def cursor(self) -> int:
@@ -48,6 +51,8 @@ class CodeBlock(IInterInst):
 
     def process(self, state: InterpreterState):
         for i in self.code:
+            if state.stoped:
+                raise InterStop
             i.process(state)
 
 
@@ -135,6 +140,43 @@ class CurOut(IInterInst):
 parsing_dict |= {".": CurOut}
 
 
+class InterMoveVar(IInterInst):
+    def __init__(self, data: Dict[int, int]):
+        self.data: Dict[int, int] = data
+
+    @classmethod
+    def is_move_var(cls, code: List[IInterInst]) -> bool:
+        zero_add = 0
+        pos = 0
+        for i in code:
+            if type(i) not in (CurAdd, CurMove):
+                return False
+            if isinstance(i, CurMove):
+                pos += i.shift
+            if pos == 0 and isinstance(i, CurAdd):
+                zero_add += i.var
+        return pos == 0 and zero_add == -1
+
+    @classmethod
+    def generate(cls, code: List[Union[CurAdd, CurMove]]) -> "InterMoveVar":
+        data: Dict[int, int] = {}
+        pos = 0
+        for i in code:
+            if isinstance(i, CurAdd):
+                data[pos] = data.get(pos, 0) + i.var
+            if isinstance(i, CurMove):
+                pos += i.shift
+        return InterMoveVar(data)
+
+    def process(self, state: InterpreterState):
+        var = state.cursor
+        zero_pos = state.cursor_pos
+        for i, f in self.data.items():
+            state.cursor_pos = zero_pos + i
+            state.cursor += var * f
+        state.cursor_pos = zero_pos
+
+
 class InterWhile(CodeBlock):
     @classmethod
     def parse(cls, current: str, code: Iterator[str], out: List[Union[str, IInterInst]]):
@@ -145,10 +187,15 @@ class InterWhile(CodeBlock):
                 break
             if var in parsing_dict.keys():
                 parsing_dict[var].parse(var, code, data)
+        if InterMoveVar.is_move_var(data):
+            out.append(InterMoveVar.generate(data))
+            return
         out.append(InterWhile(data))
 
     def process(self, state: InterpreterState):
         while state.cursor != 0:
+            if state.stoped:
+                raise InterStop
             super().process(state)
 
 
@@ -162,8 +209,8 @@ class Interpreter(Thread):
         self.inp: Iterator[int] = []
         self.out: bytearray = bytearray()
         self.code: str = ""
-        self.stopped: bool = False
-        self.proc_code: list = []
+        self.proc_code: List[CodeBlock] = []
+        self.state = None
 
     def run(self) -> None:
         # start_end: Dict[int, int] = {}
@@ -180,71 +227,23 @@ class Interpreter(Thread):
         # for i, f in start_end.items():
         #     end_start[f] = i
 
-        state: InterpreterState = InterpreterState(self.inp, self.out)
-        pos = 0
-
-        while pos < len(self.proc_code):
-            if self.stopped:
-                break
-
-            match self.proc_code[pos]:
-                case IInterInst() as inst:
-                    inst.process(state)
-                    pos += 1
-                # case "[":
-                #     if state.cursor == 0:
-                #         pos = start_end[pos] + 1
-                #     else:
-                #         pos += 1
-                # case "]":
-                #     if state.cursor != 0:
-                #         pos = end_start[pos] + 1
-                #     else:
-                #         pos += 1
-                case _:
-                    pos += 1
-        pass
+        self.state: InterpreterState = InterpreterState(self.inp, self.out)
+        self.proc_code[-1].process(self.state)
 
     def generate_proc_code(self):
         self.proc_code = []
         CodeBlock.parse("", iter(self.code.replace("[-]", "0")), self.proc_code)
-        pass
-        # last = None
-        # for i in self.code.replace("[-]", "0"):
-        #     match i:
-        #         case "[" | "]":
-        #             last = i
-        #             self.proc_code.append(last)
-        #         case ".":
-        #             last = CurOut()
-        #             self.proc_code.append(last)
-        #         case ",":
-        #             last = CurIn()
-        #             self.proc_code.append(last)
-        #         case "0":
-        #             last = CurSet(0)
-        #             self.proc_code.append(last)
-        #         case ">" | "<":
-        #             if not isinstance(last, CurMove):
-        #                 last = CurMove(0)
-        #                 self.proc_code.append(last)
-        #             last.shift += 1 if i == ">" else -1
-        #         case "+" | "-":
-        #             if not isinstance(last, CurAdd):
-        #                 last = CurAdd(0)
-        #                 self.proc_code.append(last)
-        #             last.var += 1 if i == "+" else -1
 
     def __call__(self, code: str, inp: Iterable[int]):
         self.code = code
         self.inp = iter(inp)
         self.out = bytearray()
-        self.stopped = False
         self.generate_proc_code()
 
         self.start()
         self.join(self.timeout)
         if self.is_alive():
-            self.stopped = True
+            self.state.stopped = True
             raise TimeoutError
+        self.state.stopped = True
         return self.out
