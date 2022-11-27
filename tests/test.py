@@ -3,14 +3,13 @@ import random
 from operator import eq
 from unittest import TestCase
 
-print(os.system("python -m pip install .."))
-
-from braincompiler import compile_code
-
 from tests.interpreter import Interpreter
 
 
 class Tests(TestCase):
+    print(os.system("python -m pip install .."))
+    from braincompiler import compile_code
+    compile_code = staticmethod(compile_code)
 
     def test_2_in_reverse_out(self):
         inp = random.randbytes(2)
@@ -24,7 +23,7 @@ class Tests(TestCase):
         """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertTrue(all(map(eq, out, reversed(inp))))
 
@@ -44,7 +43,7 @@ class Tests(TestCase):
                 """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertEqual((left1 + right1) % 256, out[0])
         self.assertEqual((left2 + right2) % 256, out[1])
@@ -65,7 +64,7 @@ class Tests(TestCase):
                 """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertEqual((left1 - right1 + 256) % 256, out[0])
         self.assertEqual((left2 - right2 + 256) % 256, out[1])
@@ -86,7 +85,7 @@ class Tests(TestCase):
                 """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertEqual(right1, out[0])
         self.assertEqual(right2, out[1])
@@ -107,7 +106,7 @@ class Tests(TestCase):
                 """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertEqual((left1 * right1) % 256, out[0])
         self.assertEqual((left2 * right2) % 256, out[1])
@@ -128,7 +127,7 @@ class Tests(TestCase):
                 """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertEqual((left1 * right1) % 256, out[0])
         self.assertEqual((left2 * right2) % 256, out[1])
@@ -149,7 +148,7 @@ class Tests(TestCase):
                 """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertEqual((left1 // right1) % 256, out[0])
         self.assertEqual((left2 // right2) % 256, out[1])
@@ -170,7 +169,7 @@ class Tests(TestCase):
                 """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertEqual(255, out[0])
         self.assertEqual(255, out[1])
@@ -191,7 +190,7 @@ class Tests(TestCase):
                 """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertEqual(left1 % right1, out[0])
         self.assertEqual(left2 % right2, out[1])
@@ -212,7 +211,7 @@ class Tests(TestCase):
         """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertEqual(255, out[0])
         self.assertEqual(255, out[1])
@@ -235,7 +234,7 @@ class Tests(TestCase):
         """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertEqual((left1 + right1) % 256, out[0])
         self.assertEqual((left2 + right2) % 256, out[1])
@@ -258,7 +257,7 @@ class Tests(TestCase):
         """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertEqual((left1 - right1 + 256) % 256, out[0])
         self.assertEqual((left2 - right2 + 256) % 256, out[1])
@@ -281,7 +280,7 @@ class Tests(TestCase):
         """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertEqual(right1, out[0])
         self.assertEqual(right2, out[1])
@@ -304,7 +303,7 @@ class Tests(TestCase):
         """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertEqual((left1 // right1) % 256, out[0])
         self.assertEqual((left2 // right2) % 256, out[1])
@@ -327,7 +326,7 @@ class Tests(TestCase):
         """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertEqual(255, out[0])
         self.assertEqual(255, out[1])
@@ -350,7 +349,7 @@ class Tests(TestCase):
         """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertEqual((left1 % right1) % 256, out[0])
         self.assertEqual((left2 % right2) % 256, out[1])
@@ -373,7 +372,7 @@ class Tests(TestCase):
         """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertEqual(255, out[0])
         self.assertEqual(255, out[1])
@@ -406,7 +405,7 @@ class Tests(TestCase):
         print(code)
         print(repr(inp))
         print(repr(inp2))
-        out = Interpreter(5)(compile_code(code), bytes(reversed(inp)) + inp2)
+        out = Interpreter(5)(self.compile_code(code), bytes(reversed(inp)) + inp2)
         print(out)
         self.assertEqual(len(inp2), len(out))
         for i, f in zip(inp2, out):
@@ -427,7 +426,7 @@ class Tests(TestCase):
             """
         print(code)
         print(inp)
-        out = Interpreter()(compile_code(code), inp)
+        out = Interpreter()(self.compile_code(code), inp)
         print(out)
         self.assertEqual(inp, out)
 
@@ -443,6 +442,6 @@ class Tests(TestCase):
         print(inp)
         inter = Interpreter()
         with self.assertRaises(TimeoutError):
-            inter(compile_code(code), inp)
+            inter(self.compile_code(code), inp)
         print(f"{repr(inter.out[0])} * {len(inter.out)}")
         self.assertTrue(len(inter.out) > 100)

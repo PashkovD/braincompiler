@@ -1,8 +1,10 @@
 from threading import Thread
 from typing import Dict, List, Iterable, Iterator, Union
 
+
 class InterStop(Exception):
     ...
+
 
 class InterpreterState:
     def __init__(self, inp: Iterator[int], out: bytearray, mem_len: int = 1000):
