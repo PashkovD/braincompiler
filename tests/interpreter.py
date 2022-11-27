@@ -10,7 +10,7 @@ class InterpreterState:
         self.out: bytearray = out
         self.mem: bytearray = bytearray(mem_len)
         self.cursor_pos: int = 0
-        self.stoped = False
+        self.stopped = False
 
     @property
     def cursor(self) -> int:
@@ -51,7 +51,7 @@ class CodeBlock(IInterInst):
 
     def process(self, state: InterpreterState):
         for i in self.code:
-            if state.stoped:
+            if state.stopped:
                 raise InterStop
             i.process(state)
 
@@ -194,8 +194,6 @@ class InterWhile(CodeBlock):
 
     def process(self, state: InterpreterState):
         while state.cursor != 0:
-            if state.stoped:
-                raise InterStop
             super().process(state)
 
 
@@ -213,22 +211,12 @@ class Interpreter(Thread):
         self.state = None
 
     def run(self) -> None:
-        # start_end: Dict[int, int] = {}
-        # end_start: Dict[int, int] = {}
-        # stack: List[int] = []
-        #
-        # for i, f in enumerate(self.proc_code):
-        #     if f == "[":
-        #         stack.append(i)
-        #     if f == "]":
-        #         start_end[stack.pop()] = i
-        # assert len(stack) == 0, "not enough right brackets"
-        #
-        # for i, f in start_end.items():
-        #     end_start[f] = i
-
         self.state: InterpreterState = InterpreterState(self.inp, self.out)
-        self.proc_code[-1].process(self.state)
+        try:
+            self.proc_code[-1].process(self.state)
+        except InterStop:
+            pass
+        print("stop", self.name)
 
     def generate_proc_code(self):
         self.proc_code = []
