@@ -8,7 +8,7 @@ class CodeLexer:
     tokens = keywords + (
         'INTEGER', 'STRING',
         'IADD', 'ISUB', 'IDIV', 'IMOD', 'IMUL', 'ILSHIFT', 'IRSHIFT',
-        'ID', 'NEWLINE',
+        'ID', 'NEWLINE', 'DEFINE',
     )
     literals = ['=', '+', '-', '(', ')', '{', '}', '[', ']', ',', ';', '*', ':']
 
@@ -21,6 +21,7 @@ class CodeLexer:
     t_IMUL = r'\*='
     t_ILSHIFT = r'<<='
     t_IRSHIFT = r'>>='
+    t_DEFINE = r'\#define'
 
     def __init__(self, **kwargs):
         self.lexer = lex.lex(module=self, **kwargs)

@@ -443,3 +443,26 @@ class Tests(TestCase):
             inter(self.compile_code(code), inp)
         print(f"{repr(inter.out[0])} * {len(inter.out)}")
         self.assertTrue(len(inter.out) > 100)
+
+    def test_define(self):
+        inp = b""
+        left1 = random.randint(0, 255)
+        right1 = random.randint(0, 255)
+        left2 = random.randint(0, 255)
+        right2 = random.randint(0, 255)
+        code = f"""
+            #define c {right1} + 1
+            #define d {right2} + 1
+            int a = {left1};
+            int b = {left2};
+            a += c;
+            b += d;
+            out a;
+            out b;
+        """
+        print(code)
+        print(inp)
+        out = Interpreter()(self.compile_code(code), inp)
+        print(out)
+        self.assertEqual((left1 + right1 + 1) % 256, out[0])
+        self.assertEqual((left2 + right2 + 1) % 256, out[1])

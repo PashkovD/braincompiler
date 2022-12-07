@@ -1,13 +1,13 @@
 from .lexer import *
 from .linker import *
 from .parser import *
+from .preprocessor import Preprocessor
 
 
 def compile_code(data: str) -> str:
-    code_lexer = CodeLexer()
-    code_parser = CodeParser(code_lexer.tokens, code_lexer.literals)
+    code_parser = CodeParser(CodeLexer.tokens, CodeLexer.literals)
 
-    a: ASTFile = (code_parser.parse(input=data + "\n", lexer=code_lexer.lexer))
+    a: ASTFile = (code_parser.parse(input=data + "\n", lexer=Preprocessor()))
 
     if not code_parser.parser.errorok:
         raise Exception
