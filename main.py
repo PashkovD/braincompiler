@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from pathlib import PurePosixPath
 from typing import List
 
-from src import compile_code
+from .braincompiler import compile_code
 
 
 def main(args: List[str]):
