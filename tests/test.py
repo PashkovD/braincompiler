@@ -1,4 +1,3 @@
-import os
 import random
 from operator import eq
 from unittest import TestCase
@@ -7,7 +6,6 @@ from tests.interpreter import Interpreter
 
 
 class Tests(TestCase):
-    print(os.system("python -m pip install .."))
     from braincompiler import compile_code
     compile_code = staticmethod(compile_code)
 
