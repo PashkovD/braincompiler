@@ -10,7 +10,7 @@ def compile_code(data: str, definitions: Dict[str, str] = None) -> str:
     definitions_2: Dict[str, List] = {}
     for i, f in definitions.items():
         lexer_ = CodeLexer()
-        lexer_.lexer.input(data)
+        lexer_.lexer.input(f)
         definitions_2[i] = list(lexer_.lexer)
 
     code_parser = CodeParser(CodeLexer.tokens, CodeLexer.literals)
